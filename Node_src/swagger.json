@@ -1,0 +1,518 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "neoFASS-ECG",
+    "description": "API para persistência de ECGs na nuvem"
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Observation",
+      "description": "API para recursos do tipo Observation"
+    },
+    {
+      "name": "Patient",
+      "description": "API para recursos do tipo Patient"
+    }
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/Observation": {
+      "post": {
+        "tags": [
+          "Observation"
+        ],
+        "summary": "Cria ECG Resource",
+        "description": "Cria um novo ECG resource",
+        "parameters": [
+          {
+            "name": "Observation",
+            "in": "body",
+            "description": "ECG resource request",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "SMART Auth Token",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Novo ECG Resource Criado",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          }
+        }
+      }
+    },
+    "/Observation/{id}/data/{minute}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "ID ECG Resource",
+          "type": "string"
+        },
+        {
+          "name": "minute",
+          "in": "path",
+          "required": true,
+          "description": "Busca dados por minuto",
+          "type": "string"
+        },
+        {
+          "name": "Authorization",
+          "in": "header",
+          "description": "SMART Auth Token",
+          "type": "string"
+        }
+      ],
+      "get": {
+        "summary": "Busca ECG data de um Observation por ID e Minuto",
+        "tags": [
+          "Observation"
+        ],
+        "responses": {
+          "200": {
+            "description": "Observation",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          },
+          "404": {
+            "description": "Observation not found"
+          }
+        }
+      }
+    },
+    "/Observation/{id}/data/{start}/{end}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "ID ECG Resource",
+          "type": "string"
+        },
+        {
+          "name": "start",
+          "in": "path",
+          "required": true,
+          "description": "Minuto inicial",
+          "type": "string"
+        },
+        {
+          "name": "end",
+          "in": "path",
+          "required": true,
+          "description": "Minuto final",
+          "type": "string"
+        },
+        {
+          "name": "Authorization",
+          "in": "header",
+          "description": "SMART Auth Token",
+          "type": "string"
+        }
+      ],
+      "get": {
+        "summary": "Busca ECG data de um Observation por ID e Minuto",
+        "tags": [
+          "Observation"
+        ],
+        "responses": {
+          "200": {
+            "description": "Observation",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          },
+          "404": {
+            "description": "Observation not found"
+          }
+        }
+      }
+    },
+    "/Observation/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "ID ECG Resource",
+          "type": "string"
+        },
+        {
+          "name": "Authorization",
+          "in": "header",
+          "description": "SMART Auth Token",
+          "type": "string"
+        }
+      ],
+      "get": {
+        "summary": "Busca ECG Resource por ID",
+        "tags": [
+          "Observation"
+        ],
+        "responses": {
+          "200": {
+            "description": "Observation",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          },
+          "404": {
+            "description": "Observation not found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Recurso feito no padrão JSON Patch para atualização de amostras de ECG",
+        "tags": [
+          "Observation"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID ECG Resource",
+            "type": "string"
+          },
+          {
+            "name": "Patch PatchRequest",
+            "in": "body",
+            "description": "Component request",
+            "schema": {
+              "$ref": "#/definitions/PatchRequest"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "SMART Auth Token",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observation is updated",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Observation"
+        ],
+        "summary": "Atualiza ECG Resource",
+        "description": "Atualiza ECG resource",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID ECG Resource",
+            "type": "string"
+          },
+          {
+            "name": "Observation",
+            "in": "body",
+            "description": "ECG resource request",
+            "schema": {
+              "$ref": "#/definitions/Observation"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "SMART Auth Token",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Novo ECG Resource Criado",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deleta ECG Resource por ID",
+        "tags": [
+          "Observation"
+        ],
+        "responses": {
+          "200": {
+            "description": "Observation",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "404": {
+            "description": "Observation not found"
+          }
+        }
+      }
+    },
+    "/Patient": {
+      "post": {
+        "tags": [
+          "Patient"
+        ],
+        "summary": "Cria um novo Patient Resource",
+        "description": "Cria um novo Patient Resource",
+        "parameters": [
+          {
+            "name": "Patient",
+            "in": "body",
+            "description": "Patient Resource Request",
+            "schema": {
+              "$ref": "#/definitions/Patient"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "SMART Auth Token",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Novo Patient Criado",
+            "schema": {
+              "$ref": "#/definitions/Patient"
+            }
+          }
+        }
+      }
+    },
+    "/Patient/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "ID Patient Resource",
+          "type": "string"
+        },
+        {
+          "name": "Authorization",
+          "in": "header",
+          "description": "SMART Auth Token",
+          "type": "string"
+        }
+      ],
+      "get": {
+        "summary": "Busca Patient por ID",
+        "tags": [
+          "Patient"
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient",
+            "schema": {
+              "$ref": "#/definitions/Patient"
+            }
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Patient"
+        ],
+        "summary": "Atualiza Patient Resource",
+        "description": "Atualiza Patient Resource",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID Patient Resource",
+            "type": "string"
+          },
+          {
+            "name": "Patient",
+            "in": "body",
+            "description": "Patient Resource Request",
+            "schema": {
+              "$ref": "#/definitions/Patient"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "SMART Auth Token",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Novo Patient Criado",
+            "schema": {
+              "$ref": "#/definitions/Patient"
+            }
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deleta Patient por ID",
+        "tags": [
+          "Patient"
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "404": {
+            "description": "Patient not found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Observation": {
+      "required": [
+        "resourceType"
+      ],
+      "properties": {
+        "resourceType": {
+          "type": "string"
+        }
+      }
+    },
+    "PatchRequest": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PatchDocument"
+      }
+    },
+    "PatchDocument": {
+      "description": "A JSONPatch document as defined by RFC 6902",
+      "required": [
+        "op",
+        "path"
+      ],
+      "properties": {
+        "op": {
+          "type": "string",
+          "description": "The operation to be performed",
+          "enum": [
+            "add",
+            "remove",
+            "replace",
+            "move",
+            "copy",
+            "test"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "description": "A JSON-Pointer"
+        },
+        "value": {
+          "type": "object",
+          "description": "The value to be used within the operations."
+        },
+        "from": {
+          "type": "string",
+          "description": "A string containing a JSON Pointer value."
+        }
+      }
+    },
+    "ComponentUpdate": {
+      "properties": {
+        "component": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "valueSampledData": {
+                "type": "object",
+                "properties": {
+                  "origin": {
+                    "type": "string"
+                  }
+                }
+              },
+              "period": {
+                "type": "number"
+              },
+              "factor": {
+                "type": "number"
+              },
+              "lowerLimit": {
+                "type": "number"
+              },
+              "upperLimit": {
+                "type": "number"
+              },
+              "dimensions": {
+                "type": "number"
+              },
+              "data": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Patient": {
+      "required": [
+        "resourceType"
+      ],
+      "properties": {
+        "resourceType": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
