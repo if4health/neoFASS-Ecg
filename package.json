@@ -5,11 +5,11 @@
   "license": "MIT",
   "dependencies": {
     "ajv": "^8.10.0",
-    "aws-sdk": "^2.1225.0",
     "axios": "^0.26.1",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
+    "ecg": "file:",
     "ejs": "^3.1.6",
     "express": "^4.17.1",
     "fhir-mongoose-schema-generator": "^1.0.13",
@@ -18,7 +18,7 @@
     "ip": "^1.1.5",
     "jose": "^4.8.3",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.4.3",
+    "mongoose": "^6.13.8",
     "mongoose-to-swagger": "^1.4.0",
     "nodemon": "^3.0.1",
     "yarn": "^1.22.19"
@@ -35,6 +35,7 @@
   "scripts": {
     "start": "node Node_src/server.js",
     "dev": "nodemon Node_src/server.js",
-    "seed": "python3 python_src/dbSeeder.py"
+    "seed": "python3 python_src/dbSeeder.py",
+    "trace": "node --trace-warnings Node_src/server.js"
   }
 }
