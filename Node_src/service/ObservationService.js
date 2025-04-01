@@ -1,8 +1,6 @@
 const ObservationSchema = require("../model/observation/Observation");
 const ChunckSchema = require('../model/chunck/Chunck');
 const PatientService = require("../service/PatientService");
-const S3Service = require('../service/S3Service');
-const uuid = require('uuid');
 const mongoose = require('mongoose');
 
 class ObservationService {
@@ -291,7 +289,6 @@ class ObservationService {
             observation.component.map((comp, index) => {
                 const fileName = `data_${id}_${index}.txt`;
                 const data = comp.valueSampledData.data || "";
-                S3Service.upload(fileName, data);
                 comp.valueSampledData.data = fileName;
             });
         }

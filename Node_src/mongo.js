@@ -1,13 +1,12 @@
 const mongoose = require('mongoose');
 
-const { DB_USER, DB_PASS, DB_HOST, DB_NAME } = process.env;
+const { DB_URI, DB_NAME } = process.env;
 
-let connString = `mongodb+srv://${DB_USER}:${DB_PASS}@${DB_HOST}/?retryWrites=true&w=majority`;
-console.log(connString);
+console.log(DB_URI);
 
 class dbConnect {
   constructor() {
-    mongoose.connect(connString, {
+    mongoose.connect(DB_URI, {
       dbName: DB_NAME,
       useNewUrlParser: true,
       useUnifiedTopology: true,

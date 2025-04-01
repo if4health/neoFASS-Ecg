@@ -1,15 +1,15 @@
 const fs = require('fs');
+const path = require('path');
 const { exportJWK } = require('jose');
 const jwt = require('jsonwebtoken');
-const S3Service = require('../service/S3Service');
 
 const getPublicKey = async function () {
-  return await S3Service.downloadFromS3(process.env.OAUTH_PUB);
-};
+  return fs.readFileSync(path.join(__dirname, process.env.OAUTH_PUB), 'utf8');
+}
 
 const getPrivateKey = async function () {
-  return await S3Service.downloadFromS3(process.env.OAUTH_PRIVATE);
-};
+  return fs.readFileSync(path.join(__dirname, process.env.OAUTH_PRIVATE), 'utf8');
+}
 
 module.exports.getPublicKey = getPublicKey;
 module.exports.getPrivateKey = getPrivateKey;
