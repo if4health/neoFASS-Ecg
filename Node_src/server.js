@@ -35,7 +35,7 @@ app.locals.checkScope = checkScope;
 app
   .use(bp.json())
   .use(bp.urlencoded({ extended: true }))
-  .use(router);
+  .use('/biosignalinfhir', router);
 
 app.listen(process.env.SERVER_PORT, () => {
   console.log('server started');
