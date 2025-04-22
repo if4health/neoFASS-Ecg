@@ -2,11 +2,11 @@ const jwt = require('jsonwebtoken');
 const { getPublicKey } = require('../utils/keys');
 
 function convertV2(permissions) {
-  if (permissions.includes('read', 'write', '*')) {
+  if (['read', 'write', '*'].includes(permissions)) {
     const map = {
       read: 'rs',
-      write: 'cud',
-      '*': 'cruds',
+      write: 'cudh',
+      '*': 'crudsh',
     };
     return map[permissions];
   }
@@ -20,6 +20,7 @@ function mapPermissions(permissions) {
     r: 'GET',
     u: 'PUT',
     d: 'DELETE',
+    h: 'PATCH', 
   };
   return arrayPermissions.map((permission) => {
     return {

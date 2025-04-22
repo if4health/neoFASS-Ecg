@@ -1,12 +1,13 @@
 const express = require('express');
 const app = express();
-const router = require('./router');
 const bp = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
+const router = require('./router');
 
 const mongoDB = require('./mongo');
 const { checkScope } = require('./middleware/AuthMiddleware');
