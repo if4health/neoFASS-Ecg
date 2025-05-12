@@ -52,7 +52,7 @@ function resourcesScope(scope) {
   const resourceParts = resource.split('.');
   const resourceName = resourceParts[0];
   if (resourceName === '*') {
-    return ['Patient', 'Observation'].reduce((resources, resource) => {
+    return ['Patient', 'Observation', 'Bundle', 'Practitioner'].reduce((resources, resource) => {
       const permissions = resourceParts[1];
       const testVersion = convertV2(permissions);
       const arrayPermissions = mapPermissions(testVersion);

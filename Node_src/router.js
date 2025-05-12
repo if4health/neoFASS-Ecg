@@ -5,6 +5,7 @@ const set_data = require('./class');
 const patientRouter = require('./router/PatientRouter');
 const observationRouter = require('./router/ObservationRouter');
 const practitionerRouter = require('./router/PractitionerRouter');
+const bundleRouter = require('./router/BundleRouter');
 
 const authRouter = require('./router/AuthRouter');
 
@@ -25,6 +26,7 @@ router.use('/auth', authRouter);
 router.use('/Patient', verifyJWT, patientRouter);
 router.use('/Observation', verifyJWT, observationRouter);
 router.use('/Practitioner', verifyJWT, practitionerRouter);
+router.use('/Bundle', verifyJWT, bundleRouter);
 
 router.get('/render', (req, res) => {
   const data = new set_data(req.query['id']);
