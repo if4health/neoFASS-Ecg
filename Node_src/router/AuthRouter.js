@@ -18,4 +18,6 @@ router.post('/authorize', AuthController.postAuthorize);
 
 router.post('/token', AuthController.token);
 
+router.post('/device', AuthController.device);
+
 module.exports = router;

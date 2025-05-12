@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const ObservationController = require('../controller/ObservationController');
 
-router.post('/', ObservationController.createObeservation);
+router.post('/', ObservationController.createObservation);
 
 router.get('/:id', ObservationController.getObservationById);
 

@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 class ObservationService {
 
-    async createObeservation(observation) {
+    async createObservation(observation) {
         let patientReference = this.getReference(observation);
         if (patientReference) {
             const isValidPatient = await this.isValidPatient(patientReference);

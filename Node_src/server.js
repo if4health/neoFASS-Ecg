@@ -38,5 +38,5 @@ app
   .use('/biosignalinfhir', router);
 
 app.listen(process.env.SERVER_PORT, () => {
-  console.log('server started');
+  console.log(`bioFASS inicializado no port ${process.env.SERVER_PORT}`);
 });

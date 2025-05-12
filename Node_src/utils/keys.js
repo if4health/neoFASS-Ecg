@@ -31,3 +31,7 @@ module.exports.verifyToken = async function (token) {
 module.exports.verifySymmetricToken = function (token) {
   return jwt.verify(token, process.env.OAUTH_SECRET);
 };
+
+module.exports.signDevice = async function (payload) {
+  return jwt.sign(payload, process.env.OAUTH_SECRET, { algorithm: 'HS256', noTimestamp: true });
+}

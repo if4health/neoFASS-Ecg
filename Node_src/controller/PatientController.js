@@ -1,4 +1,5 @@
 const PatientService = require('../service/PatientService');
+const ObservationService = require('../service/ObservationService')
 
 class PatientController {
 
@@ -27,9 +28,9 @@ class PatientController {
             const id = req.params.id;
             const result = await PatientService.delete(id);
             if (result == null)
-                res.status(404).send('Patient not found');
+                res.status(404).send('Patient não encontrado');
             else
-                res.json("Patient deleted");
+                res.json("Patient deletado");
         } catch (e) {
             res.status(500).json(e);
         }
@@ -41,11 +42,27 @@ class PatientController {
         try {
             const result = await PatientService.update(id, patient);
             if (result == null)
-                res.status(404).send('Patient not found');
+                res.status(404).send('Patient não encontrado');
             else
-                res.json("Patient Atualizado");
+                res.json("Patient atualizado");
         } catch (e) {
             res.status(500).json(e);
+        }
+    }
+
+    async getPatientObservations(req, res) {
+        try {
+            const id = req.params.id;
+            const observations = await ObservationService.getObservationsByPatientId(id);
+
+            if (!observations || observations.length === 0) {
+                res.status(404).send('Nenhuma Observation encontrada para este Patient.');
+            } else {
+                res.status(200).json(observations);
+            }
+        } catch (e) {
+            console.error(e);
+            res.status(500).json(e.message);
         }
     }
 

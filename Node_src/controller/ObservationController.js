@@ -1,9 +1,9 @@
 const ObservationService = require('../service/ObservationService');
 
 class ObservationController {
-    async createObeservation(req, res) {
+    async createObservation(req, res) {
         try {
-            const result = await ObservationService.createObeservation(req.body);
+            const result = await ObservationService.createObservation(req.body);
             return res.status(201).json(result);
         } catch (e) {
             console.log(e);

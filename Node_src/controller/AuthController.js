@@ -94,6 +94,10 @@ class AuthController {
   async token(req, res) {
     res.json(await AuthService.token(req.body));
   }
+
+  async device(req, res) {
+    res.json(await AuthService.device(req.body));
+  }
 }
 
 module.exports = new AuthController();
