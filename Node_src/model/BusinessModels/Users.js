@@ -1,0 +1,42 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const UsersSchema = new Schema({
+    id: {
+        type: String,
+        unique: true,
+        index: true
+    },
+    username: {
+        type: String,
+        required: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+    role: {
+        type: String,
+        enum: ['patient', 'practitioner', 'admin'],
+        required: true,
+    },
+    fhirReference: {
+        type: String,
+        required: true,
+    },
+    scopes: {
+        type: [String],
+        default: ['read', 'write'],
+    },
+    meta: {
+        createdAt: {
+            type: Date,
+            default: Date.now,
+        },
+        lastAccess: {
+            type: Date,
+        },
+    },
+});
+
+module.exports = mongoose.model('Users', UsersSchema);

@@ -1,11 +1,15 @@
 const path = require('path');
 const AuthService = require('../service/AuthService');
 const PatientService = require('../service/PatientService');
+const UserService = require('../service/UserService');
 
 class AuthController {
   // Inicia o processo de autenticação
   async register(req, res) {
-    const redirectPath = `${path.join(req.baseUrl, 'login')}?${new URLSearchParams(req.query).toString()}`;
+    const redirectPath = `${path.join(
+      req.baseUrl,
+      'login'
+    )}?${new URLSearchParams(req.query).toString()}`;
     res.redirect(redirectPath);
   }
 
@@ -27,12 +31,18 @@ class AuthController {
     }
 
     if (login.code) {
-      const redirectURL = `${redirect_uri}?${new URLSearchParams({ state, code: login.code }).toString()}`;
+      const redirectURL = `${redirect_uri}?${new URLSearchParams({
+        state,
+        code: login.code,
+      }).toString()}`;
       return res.redirect(redirectURL);
     }
 
     if (login.medico) {
-      const redirectPath = `${path.join(req.baseUrl, 'list')}?${new URLSearchParams({
+      const redirectPath = `${path.join(
+        req.baseUrl,
+        'list'
+      )}?${new URLSearchParams({
         redirect_uri,
         state,
         medico_id: login.login._id,
@@ -43,10 +53,61 @@ class AuthController {
       return res.redirect(redirectPath);
     }
 
-    const redirectPath = `${path.join(req.baseUrl, 'authorize')}?${new URLSearchParams({
+    const redirectPath = `${path.join(
+      req.baseUrl,
+      'authorize'
+    )}?${new URLSearchParams({
       redirect_uri,
       state,
       paciente_id: login.login._id,
+      aud,
+      scope,
+      client_id,
+    }).toString()}`;
+    return res.redirect(redirectPath);
+  }
+
+  async postLoginNew(req, res) {
+    const { redirect_uri, state, aud, scope, client_id } = req.body;
+    const login = await AuthService.newLogin(req.body);
+
+    if (login.code === 401) {
+      return res.render('login', {
+        ...req.body,
+        error: login.message,
+      });
+    }
+
+    if (login.code) {
+      const redirectURL = `${redirect_uri}?${new URLSearchParams({
+        state,
+        code: login.code,
+      }).toString()}`;
+      return res.redirect(redirectURL);
+    }
+
+    // if (login.medico) {
+    //   const redirectPath = `${path.join(
+    //     req.baseUrl,
+    //     'list'
+    //   )}?${new URLSearchParams({
+    //     redirect_uri,
+    //     state,
+    //     medico_id: login.login._id,
+    //     aud,
+    //     scope,
+    //     client_id,
+    //   }).toString()}`;
+    //   return res.redirect(redirectPath);
+    // }
+
+    const redirectPath = `${path.join(
+      req.baseUrl,
+      'authorize'
+    )}?${new URLSearchParams({
+      redirect_uri,
+      state,
+      user_id: login.login._id,
       aud,
       scope,
       client_id,
@@ -73,7 +134,10 @@ class AuthController {
   async select(req, res) {
     const { redirect_uri, state } = req.body;
     const auth = await AuthService.select(req.body);
-    const redirectURL = `${redirect_uri}?${new URLSearchParams({ state, code: auth.code }).toString()}`;
+    const redirectURL = `${redirect_uri}?${new URLSearchParams({
+      state,
+      code: auth.code,
+    }).toString()}`;
     res.redirect(redirectURL);
   }
 
@@ -85,8 +149,11 @@ class AuthController {
   // Confirma a autorização da aplicação pelo usuário
   async postAuthorize(req, res) {
     const { redirect_uri, state } = req.body;
-    const auth = await AuthService.authorize(req.body);
-    const redirectURL = `${redirect_uri}?${new URLSearchParams({ state, code: auth.code }).toString()}`;
+    const auth = await AuthService.newAuthorize(req.body);
+    const redirectURL = `${redirect_uri}?${new URLSearchParams({
+      state,
+      code: auth.code,
+    }).toString()}`;
     res.redirect(redirectURL);
   }
 
@@ -95,8 +162,20 @@ class AuthController {
     res.json(await AuthService.token(req.body));
   }
 
+  // Retorna o pretoken para um dispositivo
   async device(req, res) {
     res.json(await AuthService.device(req.body));
+  }
+
+  // Registra usuário
+  async signup(req, res) {
+    try {
+      const result = await UserService.create(req.body);
+      res.json(result);
+    } catch (e) {
+      console.error('Error on signup:', e.message);
+      throw e;
+    }
   }
 }
 

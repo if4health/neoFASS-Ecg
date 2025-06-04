@@ -1,6 +1,8 @@
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const AuthDatabase = require('../model/BusinessModels/Auth')();
+const UserService = require('./UserService');
 const PacienteService = require('./PacienteService');
 const MedicoService = require('./MedicoService');
 const PatientSchema = require("../model/patient/Patient");
@@ -10,8 +12,69 @@ const {
   verifySymmetricToken,
   signDevice,
 } = require('../utils/keys');
+const { getFhirResourceModel } = require('../utils/fhirUtils');
+
+
 
 class AuthService {
+  async newLogin(body) {
+    try {
+      let user = await UserService.findOne({
+        username: body.username,
+        // password: await bcrypt.compare(body.password, user.password)
+      });
+
+      let isPasswordMatch = await bcrypt.compare(body.password, user.password);
+      
+      if (!user || !isPasswordMatch) {
+        return {
+          code: 401,
+          message: 'Usuário e/ou senha estão incorretos.'
+        }
+      };
+
+      const auth = await AuthDatabase.findOne({
+        client_id: body.client_id,
+        user_id: user._id,
+        redirect_uri: body.redirect_uri
+      });
+
+      if (!auth) {
+        return {
+          login: user,
+        };
+      };
+
+      const ResourceModel = getFhirResourceModel(user.fhirReference);
+
+      const resource = await ResourceModel.findOne({
+        identifier: {
+          $elemMatch: {
+            value: mongoose.Types.ObjectId(user._id)
+          }
+        }
+      });
+
+      const payload = {
+        [user.fhirReference.toLowerCase()]: resource._id,
+        scope: auth.scope
+      };
+
+      const code = await signPayload(payload, 60);
+      auth.authorization_code = code;
+      await auth.save();
+
+      return {
+        code,
+        login: user
+      }
+
+    } catch (e) {
+      console.error('Error logging in:', e.message);
+      throw e;
+    }
+  }
+
   async login(body) {
     try {
       let login = await PacienteService.find({
@@ -66,6 +129,57 @@ class AuthService {
     }
   }
 
+  async newAuthorize(params) {
+    try {
+      const user = await UserService.findById(params.user_id);
+
+      if (!user) {
+        return {
+          code: 404,
+          message: 'Usuário não encontrado.'
+        }
+      };
+
+      const ResourceModel = getFhirResourceModel(user.fhirReference);
+
+      const resource = await ResourceModel.findOne({
+        identifier: {
+          $elemMatch: {
+            value: mongoose.Types.ObjectId(user._id)
+          }
+        }
+      });
+
+      const code = await signPayload(
+        {
+          [user.fhirReference.toLowerCase()]: resource._id,
+          scope: params.scope
+        },
+        60
+      );
+
+      await AuthDatabase.create({
+        aud: params.aud,
+        scope: params.scope,
+        client_id: params.client_id,
+        state: params.state,
+        redirect_uri: params.redirect_uri,
+        user_id: params.user_id,
+        fhir_resource: user.fhirReference,
+        authorization_code: code,
+      });
+
+      return {
+        params,
+        code,
+      };
+
+    } catch (e) {
+      console.error('Error authorizing:', e.message);
+      throw e;
+    }
+  }
+
   async authorize(params) {
     try {
       const patient = await PatientSchema.findOne({
@@ -78,7 +192,7 @@ class AuthService {
       const code = await signPayload(
         { patient: patient._id, scope: params.scope },
         60
-        );
+      );
       await AuthDatabase.create({
         aud: params.aud,
         scope: params.scope,
@@ -118,6 +232,11 @@ class AuthService {
     };
   }
 
+  async newToken(body) {
+    //TODO: client_credentials com client_id e client_secret direto
+    //TODO: dados extras no token
+  }
+
   async token(body) {
     try {
       if (body.code == null) {
@@ -126,7 +245,7 @@ class AuthService {
           message: 'Invalid params',
         };
       }
-    
+
       if (body.grant_type === 'authorization_code') {
         const decodedJWT = await verifyToken(body.code);
         const result = await AuthDatabase.findOne({
@@ -182,10 +301,10 @@ class AuthService {
           retorno.patient = decodedJWT.patient;
         }
         return retorno;
-      } 
-      
-      
-      
+      }
+
+
+
       else {
         const decodedJWT = verifySymmetricToken(body.code);
         if (decodedJWT.grant_type === 'client_credentials') {
