@@ -11,8 +11,6 @@ const CodeableConcept = require('./CodeableConcept');
 const PractitionerSchema = new Schema({
   id: {
     type: String,
-    unique: true,
-    index: true,
   },
   resourceType: {
     type: String,

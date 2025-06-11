@@ -14,12 +14,14 @@ router.post('/select', AuthController.select);
 
 router.get('/authorize', AuthController.authorize);
 
-router.post('/authorize', AuthController.postAuthorize);
+router.post('/authorize', AuthController.postAuthorizeNew);
 
-router.post('/token', AuthController.token);
+router.post('/token', AuthController.tokenNew);
 
 router.post('/device', AuthController.device);
 
-router.post('/signup', AuthController.signup);
+router.get('/signup', AuthController.renderSignup);
+
+router.post('/signup', AuthController.postSignup);
 
 module.exports = router;

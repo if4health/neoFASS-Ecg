@@ -413,6 +413,173 @@
           }
         }
       }
+    },
+    "/Practitioner": {
+      "post": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "Cria um novo Practitioner Resource",
+        "description": "Cria um novo Practitioner Resource",
+        "parameters": [
+          {
+            "name": "Practitioner",
+            "in": "body",
+            "description": "Practitioner Resource Request",
+            "schema": {
+              "$ref": "#/definitions/Practitioner"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "SMART Auth Token",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Novo Practitioner Criado",
+            "schema": {
+              "$ref": "#/definitions/Practitioner"
+            }
+          }
+        }
+      }
+    },
+    "/Practitioner/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "ID Practitioner Resource",
+          "type": "string"
+        },
+        {
+          "name": "Authorization",
+          "in": "header",
+          "description": "SMART Auth Token",
+          "type": "string"
+        }
+      ],
+      "get": {
+        "summary": "Busca Practitioner por ID",
+        "tags": [
+          "Practitioner"
+        ],
+        "responses": {
+          "200": {
+            "description": "Practitioner",
+            "schema": {
+              "$ref": "#/definitions/Practitioner"
+            }
+          },
+          "404": {
+            "description": "Practitioner not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "Atualiza Practitioner Resource",
+        "description": "Atualiza Practitioner Resource",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID Practitioner Resource",
+            "type": "string"
+          },
+          {
+            "name": "Practitioner",
+            "in": "body",
+            "description": "Practitioner Resource Request",
+            "schema": {
+              "$ref": "#/definitions/Practitioner"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "SMART Auth Token",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Novo Practitioner Criado",
+            "schema": {
+              "$ref": "#/definitions/Practitioner"
+            }
+          },
+          "404": {
+            "description": "Practitioner not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deleta Practitioner por ID",
+        "tags": [
+          "Practitioner"
+        ],
+        "responses": {
+          "200": {
+            "description": "Practitioner",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "404": {
+            "description": "Practitioner not found"
+          }
+        }
+      }
+    },
+    "/Bundle": {
+      "post": {
+        "tags": [
+          "Bundle"
+        ],
+        "summary": "Cria um novo Bundle Resource",
+        "description": "Cria um novo Bundle Resource",
+        "parameters": [
+          {
+            "name": "Bundle",
+            "in": "body",
+            "description": "Bundle Resource Request",
+            "schema": {
+              "$ref": "#/definitions/Bundle"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "SMART Auth Token",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Novo Bundle Criado",
+            "schema": {
+              "$ref": "#/definitions/Bundle"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -504,6 +671,26 @@
       }
     },
     "Patient": {
+      "required": [
+        "resourceType"
+      ],
+      "properties": {
+        "resourceType": {
+          "type": "string"
+        }
+      }
+    },
+    "Practitioner": {
+      "required": [
+        "resourceType"
+      ],
+      "properties": {
+        "resourceType": {
+          "type": "string"
+        }
+      }
+    },
+    "Bundle": {
       "required": [
         "resourceType"
       ],

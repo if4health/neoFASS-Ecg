@@ -35,7 +35,7 @@ router.get('/render', (req, res) => {
 });
 
 router.get('/dashboard', (req, res) => {
-  res.render('index');
+  res.render('dashboard');
 });
 
 router.get('/.well-known/smart-configuration', (req, res) => {

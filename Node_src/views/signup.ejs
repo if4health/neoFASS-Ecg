@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+    <body>
+        <div class="form-container">
+            <img src="/logo.png" />
+            <span>Cadastro</span>
+            <form method="POST" action="signup" autocomplete="off">
+                <div class="form-input">
+                    <label for="username">Nome de Usuário: </label>
+                    <input type="text" name="username" placeholder="Usuário">
+                </div>
+                <div class="form-input">
+                    <label for="password">Senha: </label>
+                    <input type="password" name="password" placeholder="********">
+                </div>
+                
+                <div class="form-input">
+                    <label for="name">Nome: </label>
+                    <input type="text" name="name" placeholder="João">
+                </div>
+
+                <div class="form-input">
+                    <label for="surname">Sobrenome: </label>
+                    <input type="text" name="surname" placeholder="da Silva">
+                </div>
+
+                <div class="form-input">
+                    <label for="role">Papel:</label>
+                    <select name="role" id="role" required>
+                        <option value="patient">Patient</option>
+                        <option value="practitioner">Practitioner</option>
+                    </select>
+                </div>
+                <input type="submit" value="Cadastrar">
+            
+            </form>
+        </div>
+    </body>
+</html>

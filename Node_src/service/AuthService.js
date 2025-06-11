@@ -12,7 +12,7 @@ const {
   verifySymmetricToken,
   signDevice,
 } = require('../utils/keys');
-const { getFhirResourceModel } = require('../utils/fhirUtils');
+const { getFhirResourceModel, parseFhirReference } = require('../utils/fhirUtils');
 
 
 
@@ -21,11 +21,10 @@ class AuthService {
     try {
       let user = await UserService.findOne({
         username: body.username,
-        // password: await bcrypt.compare(body.password, user.password)
       });
-
-      let isPasswordMatch = await bcrypt.compare(body.password, user.password);
       
+      let isPasswordMatch = await bcrypt.compare(body.password, user.password);
+
       if (!user || !isPasswordMatch) {
         return {
           code: 401,
@@ -45,7 +44,7 @@ class AuthService {
         };
       };
 
-      const ResourceModel = getFhirResourceModel(user.fhirReference);
+      const ResourceModel = getFhirResourceModel(parseFhirReference(user.fhirReference));
 
       const resource = await ResourceModel.findOne({
         identifier: {
@@ -132,7 +131,7 @@ class AuthService {
   async newAuthorize(params) {
     try {
       const user = await UserService.findById(params.user_id);
-
+      
       if (!user) {
         return {
           code: 404,
@@ -140,7 +139,7 @@ class AuthService {
         }
       };
 
-      const ResourceModel = getFhirResourceModel(user.fhirReference);
+      const ResourceModel = getFhirResourceModel(parseFhirReference(user.fhirReference));
 
       const resource = await ResourceModel.findOne({
         identifier: {
@@ -233,8 +232,126 @@ class AuthService {
   }
 
   async newToken(body) {
-    //TODO: client_credentials com client_id e client_secret direto
-    //TODO: dados extras no token
+    try {
+      if (!body.grant_type) {
+        return {
+          code: 400,
+          message: 'Grant_type em falta.',
+        };
+      }
+
+      if (body.grant_type === 'authorization_code') {
+        if (!body.code || !body.client_id || !body.redirect_uri) {
+          return {
+            code: 400,
+            message: 'Parâmetros para authorization_code em falta.',
+          };
+        }
+
+        const decoded = await verifyToken(body.code);
+
+        const auth = await AuthDatabase.findOne({
+          client_id: body.client_id,
+          redirect_uri: body.redirect_uri,
+          user_id: decoded.patient || decoded.user,
+          authorization_code: body.code,
+        });
+
+        if (!auth) {
+          return {
+            code: 401,
+            message: 'Authorization code inválido ou expirado.',
+          };
+        }
+
+        auth.authorization_code = null;
+        await auth.save();
+
+        const resourceModel = getFhirResourceModel(decoded.patient ? 'Patient' : 'Practitioner');
+        const resource = await resourceModel.findById(decoded.patient || decoded.user);
+
+        const payload = {
+          scope: decoded.scope,
+          client_id: body.client_id,
+          ...(decoded.patient && { patient: decoded.patient }),
+          ...(decoded.user && { fhirUser: `${process.env.DEFAULT_URL}/${resource.resourceType}/${resource._id}` }),
+        };
+
+        const access_token = await signPayload(payload, 3600);
+
+        const response = {
+          access_token,
+          token_type: 'bearer',
+          expires_in: 3600,
+          scope: decoded.scope,
+          client_id: body.client_id,
+          ...(decoded.patient && { patient: decoded.patient }),
+          ...(decoded.user && { fhirUser: `${process.env.DEFAULT_URL}/${resource.resourceType}/${resource._id}` }),
+        };
+
+        const scopes = decoded.scope?.split(' ') || [];
+        if (scopes.includes('openid')) {
+          response.id_token = await signPayload(
+            {
+              name: resource.name?.[0]?.text || '',
+              given_name: resource.name?.[0]?.given?.[0] || '',
+              family_name: resource.name?.[0]?.family || '',
+              profile: `${process.env.DEFAULT_URL}/${resource.resourceType}/${resource._id}`,
+              fhirUser: `${process.env.DEFAULT_URL}/${resource.resourceType}/${resource._id}`,
+            },
+            3600
+          );
+        }
+
+        return response;
+
+      } else if (body.grant_type === 'client_credentials') {
+        if (!body.client_id || !body.client_secret) {
+          return {
+            code: 400,
+            message: 'client_id e/ou client_secret em falta.',
+          };
+        }
+
+        const auth = await AuthDatabase.findOne({
+          client_id: body.client_id,
+          client_secret: body.client_secret,
+        });
+
+        if (!auth) {
+          return {
+            code: 401,
+            message: 'Credenciais inválidas.',
+          };
+        }
+
+        const payload = {
+          client_id: auth.client_id,
+          scope: auth.scope,
+        };
+
+        const access_token = await signPayload(payload, 3600);
+
+        return {
+          access_token,
+          token_type: 'bearer',
+          expires_in: 3600,
+          scope: auth.scope,
+          client_id: auth.client_id,
+        };
+      } else {
+        return {
+          code: 400,
+          message: `grant_type não suportado: ${body.grant_type}`,
+        };
+      }
+    } catch (e) {
+      console.error('Error in token request:', e.message);
+      return {
+        code: 500,
+        message: 'Erro no servidor.',
+      };
+    }
   }
 
   async token(body) {
@@ -302,7 +419,6 @@ class AuthService {
         }
         return retorno;
       }
-
 
 
       else {

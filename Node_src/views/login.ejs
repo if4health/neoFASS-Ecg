@@ -1,51 +1,31 @@
 <html>
     <head>
-        <style>
-            body {
-                background-color: #143d59;
-            }
-            .center {
-                position: fixed;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-            .flex {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-            input {
-                -webkit-appearance: none;
-                appearance: none;
-                border-radius: 1em;
-                margin: 1em;
-                border: 1px solid white;
-                padding: 0.3rem;
-                width: 100%;
-            }
-        </style>
+        <link rel="stylesheet" href="/css/styles.css">
     </head>
     <body>
-        <div class="center">
-            <img src="/logo.png" style="width: 50%; height: auto;" />
-            <form method="POST" action="login">
+        <div class="form-container">
+            <img src="/logo.png" />
+            <span>Login</span>
+            <form method="POST" action="login" autocomplete="off">
                 <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>">
                 <input type="hidden" name="state" value="<%= state %>">
                 <input type="hidden" name="aud" value="<%= aud %>">
                 <input type="hidden" name="scope" value="<%= scope %>">
                 <input type="hidden" name="client_id" value="<%= client_id %>">
-                <div class="flex">
-                    <input type="text" name="username">
-                    <input type="password" name="password">
+                
+                <div class="form-input">
+                    <label for="username">Nome de Usuário: </label>
+                    <input type="text" name="username" placeholder="Usuário">
+                </div>
+                <div class="form-input">
+                    <label for="password">Senha: </label>
+                    <input type="password" name="password" placeholder="********">
                     <% if(typeof error !== 'undefined') { %>
                         <p style="color: red"><%= error %></p>
                     <% } %>
-                    <input type="submit" value="Login">
                 </div>
+                <input type="submit" value="Login">
+            
             </form>
         </div>
     </body>

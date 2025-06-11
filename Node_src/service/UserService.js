@@ -1,6 +1,7 @@
+const mongoose = require('mongoose'); // Needed for ObjectId
 const bcrypt = require('bcrypt');
 const UserDatabase = require('../model/BusinessModels/Users');
-const { findExistingFhirResource, createBlankFhirPerson } = require('../utils/fhirUtils');
+const { findExistingFhirResource, createBlankFhirPerson, linkFhirResource } = require('../utils/fhirUtils');
 
 const saltRounds = 10;
 
@@ -31,11 +32,11 @@ class UserService {
 
       const user = await UserDatabase.create(User);
 
+      console.log(User);
+      
       const resourceType = user.fhirReference;
-      let fhirResource = await findExistingFhirResource(resourceType, user._id);
-      if (!fhirResource) {
-        fhirResource = await createBlankFhirPerson(resourceType, user);
-      }
+
+      let fhirResource = await linkFhirResource(resourceType, User);
 
       const fhirReference = `${resourceType}/${fhirResource._id}`;
       user.fhirReference = fhirReference;
@@ -65,25 +66,27 @@ class UserService {
     }
   }
 
-  async findOne() {
+  async findOne(query) {
     try {
-      const result = await UserDatabase.findOne();
+      const result = await UserDatabase.findOne(query);
       return result;
     } catch (e) {
       return e;
     }
   }
 
+
   async findById(id) {
     try {
       const result = await UserDatabase.findOne({
-        id,
+        _id: new mongoose.Types.ObjectId(id),
       });
       return result;
     } catch (e) {
       return e;
     }
   }
+
   async remove(id) {
     try {
       const result = await UserDatabase.deleteOne(id);

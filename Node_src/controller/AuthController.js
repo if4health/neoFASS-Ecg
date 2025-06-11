@@ -1,24 +1,17 @@
-const path = require('path');
 const AuthService = require('../service/AuthService');
 const PatientService = require('../service/PatientService');
 const UserService = require('../service/UserService');
 
 class AuthController {
-  // Inicia o processo de autenticação
   async register(req, res) {
-    const redirectPath = `${path.join(
-      req.baseUrl,
-      'login'
-    )}?${new URLSearchParams(req.query).toString()}`;
+    const redirectPath = `${req.baseUrl}/login?${new URLSearchParams(req.query).toString()}`;
     res.redirect(redirectPath);
   }
 
-  // Exibe a tela de login
   login(req, res) {
     res.render('login', req.query);
   }
 
-  // Efetua o login do usuário, sendo paciente ou médico
   async postLogin(req, res) {
     const { redirect_uri, state, aud, scope, client_id } = req.body;
     const login = await AuthService.login(req.body);
@@ -39,10 +32,7 @@ class AuthController {
     }
 
     if (login.medico) {
-      const redirectPath = `${path.join(
-        req.baseUrl,
-        'list'
-      )}?${new URLSearchParams({
+      const redirectPath = `${req.baseUrl}/list?${new URLSearchParams({
         redirect_uri,
         state,
         medico_id: login.login._id,
@@ -53,10 +43,7 @@ class AuthController {
       return res.redirect(redirectPath);
     }
 
-    const redirectPath = `${path.join(
-      req.baseUrl,
-      'authorize'
-    )}?${new URLSearchParams({
+    const redirectPath = `${req.baseUrl}/authorize?${new URLSearchParams({
       redirect_uri,
       state,
       paciente_id: login.login._id,
@@ -86,25 +73,7 @@ class AuthController {
       return res.redirect(redirectURL);
     }
 
-    // if (login.medico) {
-    //   const redirectPath = `${path.join(
-    //     req.baseUrl,
-    //     'list'
-    //   )}?${new URLSearchParams({
-    //     redirect_uri,
-    //     state,
-    //     medico_id: login.login._id,
-    //     aud,
-    //     scope,
-    //     client_id,
-    //   }).toString()}`;
-    //   return res.redirect(redirectPath);
-    // }
-
-    const redirectPath = `${path.join(
-      req.baseUrl,
-      'authorize'
-    )}?${new URLSearchParams({
+    const redirectPath = `${req.baseUrl}/authorize?${new URLSearchParams({
       redirect_uri,
       state,
       user_id: login.login._id,
@@ -115,7 +84,6 @@ class AuthController {
     return res.redirect(redirectPath);
   }
 
-  // Exibe lista de pacientes do login do médico
   async list(req, res) {
     const { redirect_uri, state, aud, scope, client_id, medico_id } = req.query;
     const patients = await PatientService.findPatientByPractitioner(medico_id);
@@ -130,7 +98,6 @@ class AuthController {
     });
   }
 
-  // Seleciona o paciente para exibir os dados
   async select(req, res) {
     const { redirect_uri, state } = req.body;
     const auth = await AuthService.select(req.body);
@@ -141,13 +108,21 @@ class AuthController {
     res.redirect(redirectURL);
   }
 
-  // Exibe a tela das permissões solicitadas pela aplicação
   authorize(req, res) {
     res.render('auth', req.query);
   }
 
-  // Confirma a autorização da aplicação pelo usuário
   async postAuthorize(req, res) {
+    const { redirect_uri, state } = req.body;
+    const auth = await AuthService.authorize(req.body);
+    const redirectURL = `${redirect_uri}?${new URLSearchParams({
+      state,
+      code: auth.code,
+    }).toString()}`;
+    res.redirect(redirectURL);
+  }
+
+  async postAuthorizeNew(req, res) {
     const { redirect_uri, state } = req.body;
     const auth = await AuthService.newAuthorize(req.body);
     const redirectURL = `${redirect_uri}?${new URLSearchParams({
@@ -157,18 +132,23 @@ class AuthController {
     res.redirect(redirectURL);
   }
 
-  // Gera um token com os grant_types: 'authorization_code' e 'client_credentials'
   async token(req, res) {
     res.json(await AuthService.token(req.body));
   }
 
-  // Retorna o pretoken para um dispositivo
+  async tokenNew(req, res) {
+    res.json(await AuthService.newToken(req.body));
+  }
+
   async device(req, res) {
     res.json(await AuthService.device(req.body));
   }
 
-  // Registra usuário
-  async signup(req, res) {
+  renderSignup(req, res) {
+    res.render('signup', req.query);
+  }
+  
+  async postSignup(req, res) {
     try {
       const result = await UserService.create(req.body);
       res.json(result);

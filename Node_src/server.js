@@ -30,6 +30,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, '../img')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/views'));
+app.use('/css', express.static(path.join(__dirname, 'views/css')));
 app.locals.checkScope = checkScope;
 
 app

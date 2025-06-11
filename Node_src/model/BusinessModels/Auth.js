@@ -30,14 +30,11 @@ module.exports = function () {
     state: {
       type: String,
     },
-    patient_id: {
+    user_id: {
       type: mongoose.Types.ObjectId,
     },
-    paciente_id: {
-      type: mongoose.Types.ObjectId,
-    },
-    medico_id: {
-      type: mongoose.Types.ObjectId,
+    fhir_resource: {
+      type: String,
     },
     authorization_code: {
       type: String,
