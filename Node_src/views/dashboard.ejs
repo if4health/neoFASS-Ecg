@@ -3,11 +3,28 @@
         <link rel="stylesheet" href="/biosignalinfhir/css/styles.css">
     </head>
     <body>
-        <h1>Dashboard</h1>
-        <a href="auth/register?redirect_uri=%2Fbiosignalinfhir%2Fapi-docs&aud=asd&scope=patient%2F*.rs&state=asd&token_endpoint=%2Fauth%2Ftoken&client_id=neofass">Login</a>
-        <a href="auth/signup">Registrar usuários</a>
-        <h1>Recursos FHIR</h1>
-        <a href="">Registrar pacientes</a>
-        <a href="">Registrar médicos</a>
+        <div class="container dashboard">
+            <header>
+                <h1>Dashboard</h1>
+            </header>
+
+            <section class="card">
+                <h2>Autenticação</h2>
+                <div class="button-group">
+                    <a class="btn primary" href="auth/register?redirect_uri=%2Fbiosignalinfhir%2Fapi-docs&aud=asd&scope=patient%2F*.rs&state=asd&token_endpoint=%2Fauth%2Ftoken&client_id=neofass">Login</a>
+                    <a class="btn" href="auth/signup">Registrar usuários</a>
+                    <a class="btn" href="auth/device">Registrar dispositivos</a>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Recursos FHIR</h2>
+                <div class="button-group">
+                    <a class="btn" href="#">Pacientes</a>
+                    <a class="btn" href="#">Médicos</a>
+                    <a class="btn" href="#">Biossinais</a>
+                </div>
+            </section>
+        </div>
     </body>
 </html>

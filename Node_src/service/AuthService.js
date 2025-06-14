@@ -471,29 +471,13 @@ class AuthService {
 
   async device(body) {
     try {
-      const device = await AuthDatabase.findOne({
-        client_id: body.client_id,
-        client_secret: body.client_secret,
-      });
-
-      if (!device) {
-        throw new Error('Device not found or credentials are invalid.');
-      }
-
-      const payload = {
-        _id: { "$oid": device._id.toString() },
-        client_id: device.client_id,
-        client_secret: device.client_secret,
-        scope: device.scope,
-        grant_type: "client_credentials",
-      };
-
-      const token = await signDevice(payload);
-
-      return token;
+      //TODO: Criar auth com uuid e hash
     } catch (e) {
-      console.error('Error generating device token:', e.message);
-      throw e;
+      console.error('Error in device signup:', e.message);
+      return {
+        code: 500,
+        message: 'Erro no servidor.',
+      };
     }
   }
 }

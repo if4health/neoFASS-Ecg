@@ -4,24 +4,24 @@ const AuthController = require('../controller/AuthController');
 
 router.all('/register', AuthController.register);
 
-router.get('/login', AuthController.login);
+router.get('/login', AuthController.showLogin);
 
-router.post('/login', AuthController.postLoginNew);
+router.post('/login', AuthController.handleLogin);
 
-router.get('/list', AuthController.list);
+// router.get('/list', AuthController.list);
 
-router.post('/select', AuthController.select);
+// router.post('/select', AuthController.select);
 
-router.get('/authorize', AuthController.authorize);
+router.get('/authorize', AuthController.showAuthorize);
 
-router.post('/authorize', AuthController.postAuthorizeNew);
+router.post('/authorize', AuthController.handleAuthorize);
 
-router.post('/token', AuthController.tokenNew);
+router.post('/token', AuthController.handleToken);
 
-router.post('/device', AuthController.device);
+router.get('/device', AuthController.showDevice);
 
-router.get('/signup', AuthController.renderSignup);
+router.get('/signup', AuthController.showSignup);
 
-router.post('/signup', AuthController.postSignup);
+router.post('/signup', AuthController.handleSignup);
 
 module.exports = router;

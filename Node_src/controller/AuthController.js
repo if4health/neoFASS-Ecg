@@ -8,53 +8,11 @@ class AuthController {
     res.redirect(redirectPath);
   }
 
-  login(req, res) {
+  showLogin(req, res) {
     res.render('login', req.query);
   }
 
-  async postLogin(req, res) {
-    const { redirect_uri, state, aud, scope, client_id } = req.body;
-    const login = await AuthService.login(req.body);
-
-    if (login.code === 401) {
-      return res.render('login', {
-        ...req.body,
-        error: login.message,
-      });
-    }
-
-    if (login.code) {
-      const redirectURL = `${redirect_uri}?${new URLSearchParams({
-        state,
-        code: login.code,
-      }).toString()}`;
-      return res.redirect(redirectURL);
-    }
-
-    if (login.medico) {
-      const redirectPath = `${req.baseUrl}/list?${new URLSearchParams({
-        redirect_uri,
-        state,
-        medico_id: login.login._id,
-        aud,
-        scope,
-        client_id,
-      }).toString()}`;
-      return res.redirect(redirectPath);
-    }
-
-    const redirectPath = `${req.baseUrl}/authorize?${new URLSearchParams({
-      redirect_uri,
-      state,
-      paciente_id: login.login._id,
-      aud,
-      scope,
-      client_id,
-    }).toString()}`;
-    return res.redirect(redirectPath);
-  }
-
-  async postLoginNew(req, res) {
+  async handleLogin(req, res) {
     const { redirect_uri, state, aud, scope, client_id } = req.body;
     const login = await AuthService.newLogin(req.body);
 
@@ -108,21 +66,11 @@ class AuthController {
     res.redirect(redirectURL);
   }
 
-  authorize(req, res) {
+  showAuthorize(req, res) {
     res.render('auth', req.query);
   }
 
-  async postAuthorize(req, res) {
-    const { redirect_uri, state } = req.body;
-    const auth = await AuthService.authorize(req.body);
-    const redirectURL = `${redirect_uri}?${new URLSearchParams({
-      state,
-      code: auth.code,
-    }).toString()}`;
-    res.redirect(redirectURL);
-  }
-
-  async postAuthorizeNew(req, res) {
+  async handleAuthorize(req, res) {
     const { redirect_uri, state } = req.body;
     const auth = await AuthService.newAuthorize(req.body);
     const redirectURL = `${redirect_uri}?${new URLSearchParams({
@@ -132,11 +80,7 @@ class AuthController {
     res.redirect(redirectURL);
   }
 
-  async token(req, res) {
-    res.json(await AuthService.token(req.body));
-  }
-
-  async tokenNew(req, res) {
+  async handleToken(req, res) {
     res.json(await AuthService.newToken(req.body));
   }
 
@@ -144,11 +88,11 @@ class AuthController {
     res.json(await AuthService.device(req.body));
   }
 
-  renderSignup(req, res) {
+  showSignup(req, res) {
     res.render('signup', req.query);
   }
   
-  async postSignup(req, res) {
+  async handleSignup(req, res) {
     try {
       const result = await UserService.create(req.body);
       res.json(result);
@@ -157,6 +101,20 @@ class AuthController {
       throw e;
     }
   }
+
+  showDevice(req, res) {
+    res.render('device', req.query);
+  }
+
+  async handleDevice(req, res) {
+    try {
+      //TODO: Criar auth com uuid e hash
+    } catch (error) {
+      console.error('Error on signup:', e.message);
+      throw e;
+    }
+  }
 }
+
 
 module.exports = new AuthController();
