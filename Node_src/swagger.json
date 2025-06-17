@@ -8,6 +8,10 @@
   "basePath": "/biosignalinfhir",
   "tags": [
     {
+      "name": "Auth",
+      "description": "Rotas de autenticação"
+    },
+    {
       "name": "Observation",
       "description": "API para recursos do tipo Observation"
     },
@@ -17,6 +21,7 @@
     }
   ],
   "schemes": [
+    "http",
     "https"
   ],
   "consumes": [
@@ -26,6 +31,34 @@
     "application/json"
   ],
   "paths": {
+    "/auth/token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Retorna token de acesso ao servidor",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "description": "Token request",
+            "schema": {
+              "$ref": "#/definitions/token"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Bearer token"
+            
+          }
+        }
+      }
+    },
     "/Observation": {
       "post": {
         "tags": [
@@ -697,6 +730,33 @@
       "properties": {
         "resourceType": {
           "type": "string"
+        }
+      }
+    },
+    "token": {
+      "required": [
+        "grant_type"
+      ],
+      "properties": {
+        "grant_type": {
+          "type": "string",
+          "enum": ["authorization_code", "client_credentials"]
+        },
+        "client_id": {
+          "type": "string",
+          "example": "neofass"
+        },
+        "redirect_uri": {
+          "type": "string",
+          "example": "/biosignalinfhir/api-docs"
+        },
+        "scope": {
+          "type": "string",
+          "example": "user/*.crudsh"
+        },
+        "code": {
+          "type": "string",
+          "example": "123"
         }
       }
     }

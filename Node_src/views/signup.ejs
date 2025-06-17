@@ -1,16 +1,15 @@
 <html>
-    <head>
-        <link rel="stylesheet" href="/biosignalinfhir/css/styles.css">
-    </head>
+    <%- include('partials/head') %>
     <body>
-        <div class="container form-container">
-            <img src="/biosignalinfhir/img/logo.png" />
+        <div class="container form-container flex-center">
+            <img class="logo" src="/biosignalinfhir/img/logo.png" />
             <span>Cadastro</span>
             <form method="POST" action="signup" autocomplete="off">
                 <div class="form-input">
                     <label for="username">Nome de Usuário: </label>
                     <input type="text" name="username" placeholder="Usuário">
                 </div>
+
                 <div class="form-input">
                     <label for="password">Senha: </label>
                     <input type="password" name="password" placeholder="********">
@@ -26,6 +25,21 @@
                     <input type="text" name="surname" placeholder="da Silva">
                 </div>
 
+                <div class="form-input">
+                    <label for="email">Email: </label>
+                    <input type="text" name="email" placeholder="jsilva@mail.com">
+                </div>
+
+                <div class="form-input">
+                    <label for="phone">Telefone: </label>
+                    <input type="text" name="phone" patten="\d{10,11}" placeholder="51123456789">
+                </div>
+
+                <div class="form-input">
+                    <label for="birthdate">Data de Nascimento: </label>
+                    <input type="date" name="birthdate">
+                </div>
+                
                 <div class="form-input">
                     <label for="role">Papel:</label>
                     <select name="role" id="role" required>

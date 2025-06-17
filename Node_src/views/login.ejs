@@ -1,10 +1,8 @@
 <html>
-    <head>
-        <link rel="stylesheet" href="/biosignalinfhir/css/styles.css">
-    </head>
+    <%- include('partials/head') %>
     <body>
-        <div class="container form-container">
-            <img src="/biosignalinfhir/img/logo.png" />
+        <div class="container form-container flex-center">
+            <img class="logo" src="/biosignalinfhir/img/logo.png" />
             <span>Login</span>
             <form method="POST" action="login" autocomplete="off">
                 <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>">
@@ -15,11 +13,11 @@
                 
                 <div class="form-input">
                     <label for="username">Nome de Usuário: </label>
-                    <input type="text" name="username" placeholder="Usuário">
+                    <input type="text" name="username" required placeholder="Usuário">
                 </div>
                 <div class="form-input">
                     <label for="password">Senha: </label>
-                    <input type="password" name="password" placeholder="********">
+                    <input type="password" name="password" required placeholder="********">
                     <% if(typeof error !== 'undefined') { %>
                         <p style="color: red"><%= error %></p>
                     <% } %>

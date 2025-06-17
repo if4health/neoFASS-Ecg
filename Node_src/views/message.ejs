@@ -1,0 +1,16 @@
+<html>
+    <%- include('partials/head') %>
+    <body>
+        <div class="container flex-center">
+            <img class="logo" src="/biosignalinfhir/img/logo.png" />
+            <p><%= message %></p>
+
+            <% if (locals?.client_id && locals?.client_secret) { %>
+                <p><strong>Client ID:</strong> <code><%= locals?.client_id %></code></p>
+                <p><strong>Client Secret:</strong> <code><%= locals?.client_secret %></code></p>
+            <% } %>
+            
+            <a href="dashboard">Retornar</a>
+        </div>
+    </body>
+</html>

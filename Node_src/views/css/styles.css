@@ -22,6 +22,12 @@ body {
   padding: 1rem;
 }
 
+.flex-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 /* DASHBOARD */
 
 .dashboard {
@@ -87,13 +93,10 @@ body {
 .form-container {
   width: 24rem;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: 1rem;
 }
 
-.form-container > img {
+.logo {
   width: 50%;
   height: auto;
   background: #143d59;
@@ -152,4 +155,63 @@ body {
   background: rgba(255, 255, 255, 1);
   border: 1px solid #143d59;
   transition: 0.2s;
+}
+
+.form-input select {
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid gray;
+  padding: 1rem;
+  width: 100%;
+  outline: none;
+  transition: 0.3s;
+  font-size: 1rem;
+  color: #141516;
+  cursor: pointer;
+}
+
+.form-input select:focus {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid #143d59;
+  transition: 0.2s;
+}
+
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+}
+
+.auth-form h1 {
+  font-size: 1.25rem;
+  color: #111827;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.scope-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 1rem;
+}
+
+.scope-list li {
+  background: rgba(255, 255, 255, 0.5);
+  border-left: 4px solid #143d59;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.scope-list li strong {
+  color: #143d59;
 }

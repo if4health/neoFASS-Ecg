@@ -20,6 +20,8 @@ router.post('/token', AuthController.handleToken);
 
 router.get('/device', AuthController.showDevice);
 
+router.post('/device', AuthController.handleDevice);
+
 router.get('/signup', AuthController.showSignup);
 
 router.post('/signup', AuthController.handleSignup);

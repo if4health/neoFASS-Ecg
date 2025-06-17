@@ -1,13 +1,13 @@
 const mongoose = require('mongoose'); // Needed for ObjectId
 const bcrypt = require('bcrypt');
 const UserDatabase = require('../model/BusinessModels/Users');
-const { findExistingFhirResource, createBlankFhirPerson, linkFhirResource } = require('../utils/fhirUtils');
+const { linkFhirResource } = require('../utils/fhirUtils');
 
 const saltRounds = 10;
 
 const defaultScopesByRole = {
-  patient: 'openid profile user/*.read launch/patient',
-  practitioner: 'openid profile user/*.read user/*.write launch',
+  patient: 'openid profile patient/*.rs launch/patient',
+  practitioner: 'openid profile user/*.crudsh launch',
   admin: 'system/*.*',
 };
 
@@ -31,12 +31,10 @@ class UserService {
       User.fhirReference = User.fhirReference || (User.role === 'practitioner' ? 'Practitioner' : 'Patient');
 
       const user = await UserDatabase.create(User);
-
-      console.log(User);
       
       const resourceType = user.fhirReference;
 
-      let fhirResource = await linkFhirResource(resourceType, User);
+      let fhirResource = await linkFhirResource(resourceType, user);
 
       const fhirReference = `${resourceType}/${fhirResource._id}`;
       user.fhirReference = fhirReference;

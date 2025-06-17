@@ -14,7 +14,7 @@ class AuthController {
 
   async handleLogin(req, res) {
     const { redirect_uri, state, aud, scope, client_id } = req.body;
-    const login = await AuthService.newLogin(req.body);
+    const login = await AuthService.login(req.body);
 
     if (login.code === 401) {
       return res.render('login', {
@@ -42,6 +42,7 @@ class AuthController {
     return res.redirect(redirectPath);
   }
 
+  /*
   async list(req, res) {
     const { redirect_uri, state, aud, scope, client_id, medico_id } = req.query;
     const patients = await PatientService.findPatientByPractitioner(medico_id);
@@ -65,6 +66,7 @@ class AuthController {
     }).toString()}`;
     res.redirect(redirectURL);
   }
+    */
 
   showAuthorize(req, res) {
     res.render('auth', req.query);
@@ -72,7 +74,7 @@ class AuthController {
 
   async handleAuthorize(req, res) {
     const { redirect_uri, state } = req.body;
-    const auth = await AuthService.newAuthorize(req.body);
+    const auth = await AuthService.authorize(req.body);
     const redirectURL = `${redirect_uri}?${new URLSearchParams({
       state,
       code: auth.code,
@@ -81,24 +83,29 @@ class AuthController {
   }
 
   async handleToken(req, res) {
-    res.json(await AuthService.newToken(req.body));
-  }
-
-  async device(req, res) {
-    res.json(await AuthService.device(req.body));
+    res.json(await AuthService.token(req.body));
   }
 
   showSignup(req, res) {
     res.render('signup', req.query);
   }
-  
+
   async handleSignup(req, res) {
     try {
       const result = await UserService.create(req.body);
-      res.json(result);
+      req.session.flash = {
+        message: 'Usuário registrado com sucesso!',
+      };
+
+      res.redirect('/biosignalinfhir/message');
     } catch (e) {
       console.error('Error on signup:', e.message);
-      throw e;
+
+      req.session.flash = {
+        message: 'Registro de usuário falhou: ' + error.message,
+      };
+
+      res.redirect('/biosignalinfhir/message');
     }
   }
 
@@ -108,10 +115,23 @@ class AuthController {
 
   async handleDevice(req, res) {
     try {
-      //TODO: Criar auth com uuid e hash
+      const result = await AuthService.device(req.body);
+
+      req.session.flash = {
+        message: 'Dispositivo registrado com sucesso! Guarde as seguintes credenciais: ',
+        client_id: result.client_id,
+        client_secret: result.client_secret,
+      };
+
+      res.redirect('/biosignalinfhir/message');
     } catch (error) {
-      console.error('Error on signup:', e.message);
-      throw e;
+      console.error('Error on device registration:', error.message);
+
+      req.session.flash = {
+        message: 'Registro de dispositivo falhou: ' + error.message,
+      };
+
+      res.redirect('/biosignalinfhir/message');
     }
   }
 }

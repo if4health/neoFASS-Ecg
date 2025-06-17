@@ -31,7 +31,8 @@ async function linkFhirResource(type, User) {
                 family: User.surname,
                 given: User.name
             }
-        }
+        },
+        birthDate: User.birthDate,
     })
 
     if(fhirResource) return fhirResource;
@@ -41,13 +42,27 @@ async function linkFhirResource(type, User) {
         identifier: [
             {
                 system: 'IF4Health',
+                value: User._id.toString(),
             },
         ],
         name: [
             {
                 use: 'official',
                 family: User.surname,
-                given: User.name,
+                given: [User.name],
+            },
+        ],
+        birthDate: User.birthDate,
+        telecom: [
+            {
+            system: 'phone',
+            value: User.phone,
+            use: 'mobile',
+            },
+            {
+            system: 'email',
+            value: User.email,
+            use: 'home',
             },
         ],
         });

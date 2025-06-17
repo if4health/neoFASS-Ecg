@@ -1,7 +1,5 @@
 <html>
-    <head>
-        <link rel="stylesheet" href="/biosignalinfhir/css/styles.css">
-    </head>
+    <%- include('partials/head') %>
     <body>
         <div class="container dashboard">
             <header>
@@ -12,8 +10,11 @@
                 <h2>Autenticação</h2>
                 <div class="button-group">
                     <a class="btn primary" href="auth/register?redirect_uri=%2Fbiosignalinfhir%2Fapi-docs&aud=asd&scope=patient%2F*.rs&state=asd&token_endpoint=%2Fauth%2Ftoken&client_id=neofass">Login</a>
+                    <a class="btn primary" href="auth/register?redirect_uri=%2Fbiosignalinfhir%2Fapi-docs&aud=asd&scope=user%2F*.crudsh&state=asd&token_endpoint=%2Fauth%2Ftoken&client_id=neofass">Login (Médico)</a>
                     <a class="btn" href="auth/signup">Registrar usuários</a>
                     <a class="btn" href="auth/device">Registrar dispositivos</a>
+                    <a class="btn" href="#">Gerenciar usuários</a>
+                    <a class="btn" href="#">Gerenciar dispositivos</a>
                 </div>
             </section>
 

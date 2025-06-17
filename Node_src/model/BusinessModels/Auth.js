@@ -4,7 +4,6 @@ module.exports = function () {
   const AuthSchema = new mongoose.Schema({
     redirect_uri: {
       type: String,
-      required: true,
     },
     client_name: {
       type: String,

@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const session = require('express-session');
 const bp = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -13,8 +14,14 @@ const mongoDB = require('./mongo');
 const { checkScope } = require('./middleware/AuthMiddleware');
 
 mongoDB.mongodb.once('open', (_) => {
-  console.log('Mongo Conectado');
+  console.log('Mongo conectado');
 });
+
+app.use(session({
+  secret: process.env.OAUTH_SECRET,
+  resave: false,
+  saveUninitialized: true,
+}));
 
 //  app.use(
 //   helmet({
@@ -40,5 +47,5 @@ app
   .use('/biosignalinfhir', router);
 
 app.listen(process.env.SERVER_PORT, () => {
-  console.log(`bioFASS inicializado no port ${process.env.SERVER_PORT}`);
+  console.log(`Biosignal in FHIR inicializado no port ${process.env.SERVER_PORT}`);
 });

@@ -38,6 +38,17 @@ router.get('/dashboard', (req, res) => {
   res.render('dashboard');
 });
 
+router.get('/message', (req, res) => {
+  const flash = req.session.flash;
+  delete req.session.flash;
+
+  if (!flash) {
+    return res.redirect('/dashboard');
+  }
+
+  res.render('message', flash);
+});
+
 router.get('/.well-known/smart-configuration', (req, res) => {
   res.json(wellKnown);
 });

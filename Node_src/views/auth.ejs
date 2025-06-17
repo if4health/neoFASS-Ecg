@@ -1,58 +1,56 @@
 <html>
-    <head>
-        <link rel="stylesheet" href="/biosignalinfhir/css/styles.css">
-        <!-- <style>
-            body {
-                background-color: #143d59;
-                color: white;
-                font-weight: bold;
-            }
-            .center {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-            }
-            h1 {
-                font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            }
-        </style> -->
-    </head>
+<%- include('partials/head') %>
+
     <body>
-        <div class="center">
-        <form method="POST" action="authorize">
-            <h1>Essa aplicação está solicitando os seguintes dados:</h1>
-            <ul>
-            <% const scopes = checkScope(scope);
-                const resources = Object.keys(scopes);
-                const mapResources = {
-                    "Patient": "dados do paciente",
-                    "Observation": "dados de exames"
-                };
-                const mapPermissions = {
-                    "GET": "Ler",
-                    "POST": "Criar",
-                    "PUT": "Alterar",
-                    "DELETE": "Excluir"
-                };
-                for(let resource of resources) {
-                    for(let i = 0; i < scopes[resource].length; i++) {
-                        const method = Object.keys(scopes[resource][i])[0];
-                        if(method != 'undefined') { %>
-                            <li><%= mapPermissions[method] %> <%= mapResources[resource] %></li>
-                    <% }
-                    }
-                }
-            %>
-            </ul>
-            <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>">
-            <input type="hidden" name="state" value="<%= state %>">
-            <input type="hidden" name="aud" value="<%= aud %>">
-            <input type="hidden" name="scope" value="<%= scope %>">
-            <input type="hidden" name="client_id" value="<%= client_id %>">
-            <input type="hidden" name="user_id" value="<%= user_id %>">
-            <input type="submit" value="Autorizar">
-        </form>
-    </div>
+        <div class="container flex-center form-container">
+
+            <img class="logo" src="/biosignalinfhir/img/logo.png" />
+
+            <span>Solicitação de Acesso</span>
+
+            <form method="POST" action="authorize" class="auth-form">
+
+                <h1>Essa aplicação está solicitando os seguintes dados:</h1>
+
+                <ul class="scope-list">
+                    <%
+                    const scopes=checkScope(scope);
+                    const resources=Object.keys(scopes);
+                    const mapResources = {
+                        "Patient" : "dados do paciente",
+                        "Observation" : "dados de exames",
+                        "Practitioner" : "dados do médico",
+                        "Bundle" : "dados de Bundle"
+                    };
+                    const mapPermissions = {
+                        "GET": "Ler",
+                        "POST": "Criar",
+                        "PUT": "Alterar",
+                        "DELETE": "Excluir"
+                    };
+                    for(let resource of resources) {
+                        for(let i=0; i < scopes[resource].length; i++) {
+                          const method=Object.keys(scopes[resource][i])[0];
+                          if (method !='undefined' ) { %>
+                        <li>
+                            <strong>
+                                <%= mapPermissions[method] %>
+                            </strong>
+                            <%= mapResources[resource] || resource %>
+                        </li>
+                        <% } } } %>
+                </ul>
+
+                <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>">
+                <input type="hidden" name="state" value="<%= state %>">
+                <input type="hidden" name="aud" value="<%= aud %>">
+                <input type="hidden" name="scope" value="<%= scope %>">
+                <input type="hidden" name="client_id" value="<%= client_id %>">
+                <input type="hidden" name="user_id" value="<%= user_id %>">
+
+                <input type="submit" value="Autorizar">
+            </form>
+        </div>
     </body>
+
 </html>

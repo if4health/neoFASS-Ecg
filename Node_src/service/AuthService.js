@@ -1,5 +1,7 @@
 const crypto = require('crypto');
+const slugify = require('slugify');
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const AuthDatabase = require('../model/BusinessModels/Auth')();
 const UserService = require('./UserService');
@@ -17,15 +19,13 @@ const { getFhirResourceModel, parseFhirReference } = require('../utils/fhirUtils
 
 
 class AuthService {
-  async newLogin(body) {
+  async login(body) {
     try {
       let user = await UserService.findOne({
         username: body.username,
       });
       
-      let isPasswordMatch = await bcrypt.compare(body.password, user.password);
-
-      if (!user || !isPasswordMatch) {
+      if (!user || !(await bcrypt.compare(body.password, user.password))) {
         return {
           code: 401,
           message: 'Usuário e/ou senha estão incorretos.'
@@ -44,24 +44,14 @@ class AuthService {
         };
       };
 
-      const ResourceModel = getFhirResourceModel(parseFhirReference(user.fhirReference));
-
-      const resource = await ResourceModel.findOne({
-        identifier: {
-          $elemMatch: {
-            value: mongoose.Types.ObjectId(user._id)
-          }
-        }
-      });
-
-      const payload = {
-        [user.fhirReference.toLowerCase()]: resource._id,
-        scope: auth.scope
-      };
-
-      const code = await signPayload(payload, 60);
-      auth.authorization_code = code;
-      await auth.save();
+      const code = await this._generateAuthorizationCode(
+        user,
+        auth.scope,
+        body.client_id,
+        body.redirect_uri,
+        auth.aud,
+        auth.state
+      );
 
       return {
         code,
@@ -74,61 +64,7 @@ class AuthService {
     }
   }
 
-  async login(body) {
-    try {
-      let login = await PacienteService.find({
-        cpf: body.cpf,
-        senha: crypto.createHash('md5').update(body.senha).digest('hex'),
-      });
-      if (login.length === 0) {
-        login = await MedicoService.find({
-          cpf: body.cpf,
-          senha: crypto.createHash('md5').update(body.senha).digest('hex'),
-        });
-        if (login.length === 0) {
-          return {
-            code: 401,
-            message: 'Login not found',
-          };
-        }
-        return {
-          medico: true,
-          login: login[0],
-        };
-      }
-
-      const auth = await AuthDatabase.findOne({
-        client_id: body.client_id,
-        paciente_id: login[0]._id,
-        redirect_uri: body.redirect_uri,
-      });
-      if (!auth || auth.length === 0) {
-        return {
-          login: login[0],
-        };
-      }
-
-      const patient = await PatientSchema.findOne({
-        identifier: {
-          $elemMatch: {
-            value: mongoose.Types.ObjectId(login[0]._id),
-          },
-        },
-      });
-      const payload = { patient: patient._id, scope: auth.scope };
-      const code = await signPayload(payload, 60);
-      auth.authorization_code = code;
-      await auth.save();
-      return {
-        code,
-        login: login[0],
-      };
-    } catch (e) {
-      return e;
-    }
-  }
-
-  async newAuthorize(params) {
+  async authorize(params) {
     try {
       const user = await UserService.findById(params.user_id);
       
@@ -139,34 +75,14 @@ class AuthService {
         }
       };
 
-      const ResourceModel = getFhirResourceModel(parseFhirReference(user.fhirReference));
-
-      const resource = await ResourceModel.findOne({
-        identifier: {
-          $elemMatch: {
-            value: mongoose.Types.ObjectId(user._id)
-          }
-        }
-      });
-
-      const code = await signPayload(
-        {
-          [user.fhirReference.toLowerCase()]: resource._id,
-          scope: params.scope
-        },
-        60
+      const code = await this._generateAuthorizationCode(
+        user,
+        params.scope,
+        params.client_id,
+        params.redirect_uri,
+        params.aud,
+        params.state
       );
-
-      await AuthDatabase.create({
-        aud: params.aud,
-        scope: params.scope,
-        client_id: params.client_id,
-        state: params.state,
-        redirect_uri: params.redirect_uri,
-        user_id: params.user_id,
-        fhir_resource: user.fhirReference,
-        authorization_code: code,
-      });
 
       return {
         params,
@@ -179,39 +95,7 @@ class AuthService {
     }
   }
 
-  async authorize(params) {
-    try {
-      const patient = await PatientSchema.findOne({
-        identifier: {
-          $elemMatch: {
-            value: mongoose.Types.ObjectId(params.paciente_id),
-          },
-        },
-      });
-      const code = await signPayload(
-        { patient: patient._id, scope: params.scope },
-        60
-      );
-      await AuthDatabase.create({
-        aud: params.aud,
-        scope: params.scope,
-        client_id: params.client_id,
-        state: params.state,
-        redirect_uri: params.redirect_uri,
-        paciente_id: params.paciente_id,
-        patient_id: patient._id,
-        authorization_code: code,
-      });
-      return {
-        params,
-        code,
-      };
-    } catch (e) {
-      return e;
-    }
-  }
-
-  async select(body) {
+  /*async select(body) {
     const patient = await PatientSchema.findById(body.patient);
     const code = await signPayload(
       { patient: patient._id, scope: body.scope },
@@ -229,9 +113,9 @@ class AuthService {
     return {
       code,
     };
-  }
+  }*/
 
-  async newToken(body) {
+  async token(body) {
     try {
       if (!body.grant_type) {
         return {
@@ -241,7 +125,8 @@ class AuthService {
       }
 
       if (body.grant_type === 'authorization_code') {
-        if (!body.code || !body.client_id || !body.redirect_uri) {
+        const { code, client_id, redirect_uri } = body;
+        if (!code || !client_id || !redirect_uri) {
           return {
             code: 400,
             message: 'Parâmetros para authorization_code em falta.',
@@ -250,11 +135,14 @@ class AuthService {
 
         const decoded = await verifyToken(body.code);
 
+        console.log("DECODED: ", decoded);
+        console.log(client_id, redirect_uri, code);
+        
         const auth = await AuthDatabase.findOne({
-          client_id: body.client_id,
-          redirect_uri: body.redirect_uri,
-          user_id: decoded.patient || decoded.user,
-          authorization_code: body.code,
+          client_id,
+          redirect_uri,
+          user_id: new mongoose.Types.ObjectId(decoded.sub),
+          authorization_code: code,
         });
 
         if (!auth) {
@@ -264,40 +152,51 @@ class AuthService {
           };
         }
 
+        
         auth.authorization_code = null;
         await auth.save();
 
-        const resourceModel = getFhirResourceModel(decoded.patient ? 'Patient' : 'Practitioner');
-        const resource = await resourceModel.findById(decoded.patient || decoded.user);
+        // Determine user type and load resource
+        const isPatient = !!decoded.patient;
+        const resourceType = isPatient ? 'Patient' : 'Practitioner';
+        const resourceModel = getFhirResourceModel(resourceType);
+        const resourceId = decoded.sub;
+        const resource = await resourceModel.findById(resourceId);
 
-        const payload = {
+        const fhirUserUrl = `${process.env.DEFAULT_URL}/${resourceType}/${resourceId}`;
+
+        // Prepare access token payload
+        const accessTokenPayload = {
+          client_id,
           scope: decoded.scope,
-          client_id: body.client_id,
-          ...(decoded.patient && { patient: decoded.patient }),
-          ...(decoded.user && { fhirUser: `${process.env.DEFAULT_URL}/${resource.resourceType}/${resource._id}` }),
+          sub: resourceId,
+          ...(isPatient && { patient: resourceId }),
+          ...(!isPatient && { fhirUser: fhirUserUrl }),
         };
 
-        const access_token = await signPayload(payload, 3600);
+        const access_token = await signPayload(accessTokenPayload, 3600);
 
         const response = {
           access_token,
           token_type: 'bearer',
           expires_in: 3600,
           scope: decoded.scope,
-          client_id: body.client_id,
-          ...(decoded.patient && { patient: decoded.patient }),
-          ...(decoded.user && { fhirUser: `${process.env.DEFAULT_URL}/${resource.resourceType}/${resource._id}` }),
+          client_id,
+          ...(isPatient && { patient: resourceId }),
+          ...(!isPatient && { fhirUser: fhirUserUrl }),
         };
 
+        // Optional OpenID ID token
         const scopes = decoded.scope?.split(' ') || [];
         if (scopes.includes('openid')) {
           response.id_token = await signPayload(
             {
+              sub: resourceId,
               name: resource.name?.[0]?.text || '',
               given_name: resource.name?.[0]?.given?.[0] || '',
               family_name: resource.name?.[0]?.family || '',
-              profile: `${process.env.DEFAULT_URL}/${resource.resourceType}/${resource._id}`,
-              fhirUser: `${process.env.DEFAULT_URL}/${resource.resourceType}/${resource._id}`,
+              profile: fhirUserUrl,
+              fhirUser: fhirUserUrl,
             },
             3600
           );
@@ -354,124 +253,36 @@ class AuthService {
     }
   }
 
-  async token(body) {
-    try {
-      if (body.code == null) {
-        return {
-          code: 400,
-          message: 'Invalid params',
-        };
-      }
-
-      if (body.grant_type === 'authorization_code') {
-        const decodedJWT = await verifyToken(body.code);
-        const result = await AuthDatabase.findOne({
-          client_id: body.client_id,
-          redirect_uri: body.redirect_uri,
-          patient_id: new mongoose.Types.ObjectId(decodedJWT.patient),
-          authorization_code: body.code,
-        });
-
-        let arrayScopes = result.scope.split(' ');
-        if (decodedJWT.scope !== undefined) {
-          arrayScopes = decodedJWT.scope.split(' ');
-        }
-        if (result === null || result.length === 0) {
-          return {
-            code: 401,
-            message: 'Invalid user',
-          };
-        }
-        result.authorization_code = null;
-        await result.save();
-        const patient = await PatientSchema.findById(decodedJWT.patient);
-        const access_token = await signPayload(
-          {
-            scope: decodedJWT.scope,
-            patient: decodedJWT.patient,
-            client_id: body.client_id,
-            expires_in: 3600,
-          },
-          3600
-        );
-        const retorno = {
-          access_token,
-          token_type: 'bearer',
-          expires_in: 3600,
-          scope: decodedJWT.scope,
-          patient: decodedJWT.patient,
-          client_id: body.client_id,
-        };
-        if (arrayScopes.includes('openid')) {
-          const id_token = await signPayload(
-            {
-              name: patient.name.use,
-              given_name: patient.name.given,
-              family_name: patient.name.family,
-              profile: `${process.env.DEFAULT_URL}/Patient/${patient._id}`,
-            },
-            3600
-          );
-          retorno.id_token = id_token;
-        }
-        if (arrayScopes.includes('launch/patient')) {
-          retorno.patient = decodedJWT.patient;
-        }
-        return retorno;
-      }
-
-
-      else {
-        const decodedJWT = verifySymmetricToken(body.code);
-        if (decodedJWT.grant_type === 'client_credentials') {
-          const result = await AuthDatabase.findOne({
-            client_id: decodedJWT.client_id,
-            client_secret: decodedJWT.client_secret,
-          });
-          if (
-            result === null ||
-            result.length === 0 ||
-            result.client_secret !== decodedJWT.client_secret
-          ) {
-            return {
-              code: 401,
-              message: 'Invalid user',
-            };
-          }
-          const access_token = await signPayload(
-            {
-              scope: result.scope,
-              client_id: body.client_id,
-              expires_in: 3600,
-            },
-            3600
-          );
-          const retorno = {
-            access_token,
-            token_type: 'bearer',
-            expires_in: 3600,
-            scope: body.scope,
-            client_id: body.client_id,
-          };
-          return retorno;
-        }
-        return {
-          code: 401,
-          message: 'Invalid grant type',
-        };
-      }
-    } catch (e) {
-      console.log(e);
-      return {
-        code: 401,
-        message: 'Invalid auth',
-      };
-    }
-  }
-
   async device(body) {
     try {
-      //TODO: Criar auth com uuid e hash
+      if(!body.client_name){
+        return {
+          code: 400,
+          message: 'Client_name em falta.',
+        };
+      }
+
+      const client_name = body.client_name;
+      const slug = slugify(body.client_name, { lower: true, strict: true });
+      const client_id = `${uuidv4().slice(0, 12)}-${slug}`;
+      const client_secret = crypto.randomBytes(32).toString('hex');
+      const scope = 'all/*.crudsh';
+
+      const auth = new AuthDatabase({
+        client_name,
+        client_id,
+        client_secret,
+        scope
+
+      })
+
+      await auth.save();
+
+      return {
+          client_id,
+          client_secret
+        };
+
     } catch (e) {
       console.error('Error in device signup:', e.message);
       return {
@@ -480,6 +291,54 @@ class AuthService {
       };
     }
   }
+
+  ///
+  async _generateAuthorizationCode(user, scope, client_id, redirect_uri, aud, state) {
+  const resourceType = parseFhirReference(user.fhirReference);
+  const ResourceModel = getFhirResourceModel(resourceType);
+
+  const resource = await ResourceModel.findOne({
+    identifier: {
+      $elemMatch: {
+        value: mongoose.Types.ObjectId(user._id),
+      },
+    },
+  });
+
+  if (!resource) {
+    throw new Error('Recurso FHIR associado não encontrado.');
+  }
+
+  const isPatient = resourceType === 'Patient';
+  const sub = resource._id.toString();
+
+  const payload = {
+    sub,
+    scope,
+    ...(isPatient ? { patient: sub } : { fhirUser: `${process.env.DEFAULT_URL}/${resourceType}/${sub}` }),
+  };
+
+  const code = await signPayload(payload, 60);
+
+  await AuthDatabase.findOneAndUpdate(
+    { client_id, user_id: user._id, redirect_uri },
+    {
+      client_id,
+      user_id: resource._id,
+      redirect_uri,
+      aud,
+      state,
+      scope,
+      authorization_code: code,
+      fhir_resource: user.fhirReference,
+    },
+    { upsert: true }
+  );
+
+  return code;
+}
+
+  
 }
 
 module.exports = new AuthService();
