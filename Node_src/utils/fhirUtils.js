@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const PatientSchema = require('../model/patient/Patient');
 const PractitionerSchema = require('../model/practitioner/Practitioner');
 
+const defaultScopesByRole = {
+  patient: ['openid', 'profile', 'patient/*.rs', 'launch/patient'],
+  practitioner: ['openid', 'profile', 'user/*.crudsh', 'launch'],
+};
+
 function getFhirResourceModel(type) {
     const models = {
         Patient: PatientSchema,
@@ -11,7 +16,7 @@ function getFhirResourceModel(type) {
     if (!model) {
         throw new Error(`Unknown FHIR resource type: ${type}`);
     }
-    return model;;
+    return model;
 }
 
 function parseFhirReference(reference) {
@@ -23,16 +28,16 @@ function parseFhirReference(reference) {
 }
 
 
-async function linkFhirResource(type, User) {
+async function linkFhirResource(type, userData) {
     const Model = getFhirResourceModel(type);
     let fhirResource = await Model.findOne({
         name: {
             $elemMatch: {
-                family: User.surname,
-                given: User.name
+                family: userData.surname,
+                given: userData.name
             }
         },
-        birthDate: User.birthDate,
+        birthDate: userData.birthDate,
     })
 
     if(fhirResource) return fhirResource;
@@ -42,26 +47,26 @@ async function linkFhirResource(type, User) {
         identifier: [
             {
                 system: 'IF4Health',
-                value: User._id.toString(),
+                value: userData._id.toString(),
             },
         ],
         name: [
             {
                 use: 'official',
-                family: User.surname,
-                given: [User.name],
+                family: userData.surname,
+                given: [userData.name],
             },
         ],
-        birthDate: User.birthDate,
+        birthDate: userData.birthDate,
         telecom: [
             {
             system: 'phone',
-            value: User.phone,
+            value: userData.phone,
             use: 'mobile',
             },
             {
             system: 'email',
-            value: User.email,
+            value: userData.email,
             use: 'home',
             },
         ],
@@ -106,5 +111,6 @@ module.exports = {
     findExistingFhirResource,
     createBlankFhirPerson,
     parseFhirReference,
-    linkFhirResource
+    linkFhirResource,
+    defaultScopesByRole
 };

@@ -5,7 +5,7 @@
     "title": "neoFASS-ECG",
     "description": "API para persistência de ECGs na nuvem"
   },
-  "basePath": "/biosignalinfhir",
+  "basePath": "/biofass",
   "tags": [
     {
       "name": "Auth",
@@ -748,7 +748,7 @@
         },
         "redirect_uri": {
           "type": "string",
-          "example": "/biosignalinfhir/api-docs"
+          "example": "/biofass/api-docs"
         },
         "scope": {
           "type": "string",

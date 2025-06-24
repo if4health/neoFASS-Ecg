@@ -20,10 +20,6 @@ const UsersSchema = new Schema({
         type: String,
         required: true,
     },
-    scopes: {
-        type: [String],
-        default: ['read', 'write'],
-    },
     meta: {
         createdAt: {
             type: Date,

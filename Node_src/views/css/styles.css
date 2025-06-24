@@ -88,6 +88,14 @@ body {
   background: #2563eb;
 }
 
+.btn.disabled {
+  background: #ccc;
+  color: gray;
+  &:hover {
+    background: #ccc;
+  }
+}
+
 /* FORMULÁRIOS */
 
 .form-container {

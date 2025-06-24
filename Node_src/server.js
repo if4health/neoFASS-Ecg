@@ -37,14 +37,14 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, '../img')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/views'));
-app.use('/biosignalinfhir/css', express.static(path.join(__dirname, 'views/css')));
-app.use('/biosignalinfhir/img', express.static(path.join(__dirname, 'views/img')));
+app.use('/biofass/css', express.static(path.join(__dirname, 'views/css')));
+app.use('/biofass/img', express.static(path.join(__dirname, 'views/img')));
 app.locals.checkScope = checkScope;
 
 app
   .use(bp.json())
   .use(bp.urlencoded({ extended: true }))
-  .use('/biosignalinfhir', router);
+  .use('/biofass', router);
 
 app.listen(process.env.SERVER_PORT, () => {
   console.log(`Biosignal in FHIR inicializado no port ${process.env.SERVER_PORT}`);

@@ -97,7 +97,7 @@ class AuthController {
         message: 'Usuário registrado com sucesso!',
       };
 
-      res.redirect('/biosignalinfhir/message');
+      res.redirect('/biofass/message');
     } catch (e) {
       console.error('Error on signup:', e.message);
 
@@ -105,7 +105,7 @@ class AuthController {
         message: 'Registro de usuário falhou: ' + error.message,
       };
 
-      res.redirect('/biosignalinfhir/message');
+      res.redirect('/biofass/message');
     }
   }
 
@@ -123,7 +123,7 @@ class AuthController {
         client_secret: result.client_secret,
       };
 
-      res.redirect('/biosignalinfhir/message');
+      res.redirect('/biofass/message');
     } catch (error) {
       console.error('Error on device registration:', error.message);
 
@@ -131,7 +131,7 @@ class AuthController {
         message: 'Registro de dispositivo falhou: ' + error.message,
       };
 
-      res.redirect('/biosignalinfhir/message');
+      res.redirect('/biofass/message');
     }
   }
 }

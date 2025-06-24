@@ -5,12 +5,6 @@ const { linkFhirResource } = require('../utils/fhirUtils');
 
 const saltRounds = 10;
 
-const defaultScopesByRole = {
-  patient: 'openid profile patient/*.rs launch/patient',
-  practitioner: 'openid profile user/*.crudsh launch',
-  admin: 'system/*.*',
-};
-
 class UserService {
   async create(User) {
     try {
@@ -26,15 +20,23 @@ class UserService {
       User.password = await bcrypt.hash(User.password, saltRounds);
       
       if (!User.role) User.role = 'patient';
-      if (!User.scopes) User.scopes = defaultScopesByRole[User.role];
 
       User.fhirReference = User.fhirReference || (User.role === 'practitioner' ? 'Practitioner' : 'Patient');
 
       const user = await UserDatabase.create(User);
       
+      const userData = {
+        _id: user._id,
+        name: User.name,
+        surname: User.surname,
+        birthDate: User.birthDate,
+        phone: User.phone,
+        email: User.email,
+      }
+      
       const resourceType = user.fhirReference;
 
-      let fhirResource = await linkFhirResource(resourceType, user);
+      let fhirResource = await linkFhirResource(resourceType, userData);
 
       const fhirReference = `${resourceType}/${fhirResource._id}`;
       user.fhirReference = fhirReference;

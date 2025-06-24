@@ -1,5 +1,5 @@
 const ObservationSchema = require("../model/observation/Observation");
-const ChunckSchema = require('../model/chunck/Chunck');
+const ChunkSchema = require('../model/chunk/Chunk');
 const PatientService = require("../service/PatientService");
 const mongoose = require('mongoose');
 
@@ -34,29 +34,29 @@ class ObservationService {
     async chuckData(maxSamples, data, reference, position) {
         const values = data.split(' ');
         let soma = 0;
-        let chunckData = "";
+        let chunkData = "";
         for (let i of values) {
-            chunckData = chunckData + i + " ";
+            chunkData = chunkData + i + " ";
             soma++;
             if (soma == maxSamples) {
-                const chunck = {
+                const chunk = {
                     reference: reference,
                     position: position,
-                    data: chunckData.trim()
+                    data: chunkData.trim()
                 }
-                await ChunckSchema.create(chunck);
-                chunckData = "";
+                await ChunkSchema.create(chunk);
+                chunkData = "";
                 soma = 0;
                 position++;
             }
         }
-        if (chunckData != "") {
-            const chunck = {
+        if (chunkData != "") {
+            const chunk = {
                 reference: reference,
                 position: position++,
-                data: chunckData.trim()
+                data: chunkData.trim()
             }
-            await ChunckSchema.create(chunck);
+            await ChunkSchema.create(chunk);
         }
     }
 
@@ -91,7 +91,7 @@ class ObservationService {
         const references = observation.component.map(comp => comp.valueSampledData.data);
 
         const promisses = references.map(async (ref) =>
-            await ChunckSchema.find({ 'reference': ref }).sort({ position: -1 }).limit(1).exec());
+            await ChunkSchema.find({ 'reference': ref }).sort({ position: -1 }).limit(1).exec());
 
         await Promise.all(promisses)
             .then((values) => {
@@ -105,53 +105,53 @@ class ObservationService {
 
         observation.component.map((comp, index) => {
             const maxSamples = this.getMaxSamples(comp.valueSampledData.period);
-            const lastChunck = lastChunks[index];
-            const lastChunckSize = Math.round(lastChunck.data.split(' ').length);
+            const lastChunk = lastChunks[index];
+            const lastChunkSize = Math.round(lastChunk.data.split(' ').length);
             const reference = comp.valueSampledData.data;
-            if (lastChunckSize >= maxSamples) {
-                //Fazer fluxo de chunck com uma posicao acima da ultima se 30 proximo é 31
-                this.chuckData(maxSamples, values[index], reference, lastChunck.position++);
+            if (lastChunkSize >= maxSamples) {
+                //Fazer fluxo de chunk com uma posicao acima da ultima se 30 proximo é 31
+                this.chuckData(maxSamples, values[index], reference, lastChunk.position++);
             } else {
 
                 //Juntar data ate o 1 min e fazer update na ultima posição;
-                const data = lastChunck.data.concat(' ' + values[index]);
+                const data = lastChunk.data.concat(' ' + values[index]);
                 const samples = data.split(' ');
 
-                let chuncks = [];
+                let chunks = [];
                 let soma = 0;
-                let position = lastChunck.position;
-                let chunckData = "";
+                let position = lastChunk.position;
+                let chunkData = "";
 
                 for (let i of samples) {
-                    chunckData = chunckData + i + " ";
+                    chunkData = chunkData + i + " ";
                     soma++;
                     if (soma == maxSamples) {
-                        chuncks.push({
+                        chunks.push({
                             reference: reference,
                             position: position,
-                            data: chunckData.trim()
+                            data: chunkData.trim()
                         });
                         position++;
                         soma = 0;
-                        chunckData = "";
+                        chunkData = "";
                     }
                 }
-                if (chunckData != "") {
-                    chuncks.push({
+                if (chunkData != "") {
+                    chunks.push({
                         reference: reference,
                         position: position++,
-                        data: chunckData.trim()
+                        data: chunkData.trim()
                     });
                 }
-                chuncks.forEach(async (chunck, index) => {
+                chunks.forEach(async (chunk, index) => {
                     if (index == 0) {
-                        await ChunckSchema.findByIdAndUpdate({
-                            _id: lastChunck._id,
+                        await ChunkSchema.findByIdAndUpdate({
+                            _id: lastChunk._id,
                             reference: reference,
-                            position: lastChunck.position
-                        }, chunck);
+                            position: lastChunk.position
+                        }, chunk);
                     } else {
-                        await ChunckSchema.create(chunck);
+                        await ChunkSchema.create(chunk);
                     }
                 })
             }
@@ -202,7 +202,7 @@ class ObservationService {
                 'code': comp.code.coding[0].display,
                 'period': comp.valueSampledData.period
             });
-            return ChunckSchema.find({ reference: ref, position: { '$gte': start - 1, '$lte': end - 1 } })
+            return ChunkSchema.find({ reference: ref, position: { '$gte': start - 1, '$lte': end - 1 } })
         })
 
         let responses = [];
@@ -232,7 +232,7 @@ class ObservationService {
                 'code': comp.code.coding[0].display,
                 'period': comp.valueSampledData.period
             });
-            return ChunckSchema.findOne({ reference: ref, position: min - 1 }).exec();
+            return ChunkSchema.findOne({ reference: ref, position: min - 1 }).exec();
         })
 
         let responses = [];
@@ -251,19 +251,19 @@ class ObservationService {
 
     async getObservationById(id) {
         const result = await this.findById(id);
-        const sampleValues = await this.convertChunckToData(result);
+        const sampleValues = await this.convertChunkToData(result);
         result.component.forEach((comp, index) => {
             comp.valueSampledData.data = sampleValues[index];
         });
         return result;
     }
 
-    async convertChunckToData(observation) {
+    async convertChunkToData(observation) {
         let samples = [];
         if (observation) {
             const promisses = observation.component.map((comp) => {
                 const ref = comp.valueSampledData.data;
-                return ChunckSchema.find({ reference: ref })
+                return ChunkSchema.find({ reference: ref })
             });
 
             await Promise.all(promisses).then((values) => {

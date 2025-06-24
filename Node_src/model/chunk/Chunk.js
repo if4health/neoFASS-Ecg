@@ -1,6 +1,6 @@
 const { Schema, model } = require('mongoose');
 
-const ChunckSchema = new Schema({
+const ChunkSchema = new Schema({
     id: {
         type: String
     },
@@ -15,4 +15,4 @@ const ChunckSchema = new Schema({
     }
 });
 
-module.exports = model('chunck', ChunckSchema);
+module.exports = model('chunk', ChunkSchema);

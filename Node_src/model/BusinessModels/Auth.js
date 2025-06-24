@@ -38,6 +38,12 @@ module.exports = function () {
     authorization_code: {
       type: String,
     },
+    meta: {
+        createdAt: {
+            type: Date,
+            default: Date.now,
+        },
+    },
   });
 
   const AuthModel = mongoose.model('Auth', AuthSchema);
