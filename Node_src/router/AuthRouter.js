@@ -8,10 +8,6 @@ router.get('/login', AuthController.showLogin);
 
 router.post('/login', AuthController.handleLogin);
 
-// router.get('/list', AuthController.list);
-
-// router.post('/select', AuthController.select);
-
 router.get('/authorize', AuthController.showAuthorize);
 
 router.post('/authorize', AuthController.handleAuthorize);

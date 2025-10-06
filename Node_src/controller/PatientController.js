@@ -1,5 +1,4 @@
 const PatientService = require('../service/PatientService');
-const ObservationService = require('../service/ObservationService')
 
 class PatientController {
 
@@ -50,19 +49,15 @@ class PatientController {
         }
     }
 
-    async getPatientObservations(req, res) {
+    async searchPatients(req, res) {
         try {
-            const id = req.params.id;
-            const observations = await ObservationService.getObservationsByPatientId(id);
+            const params = req.query;
+            const result = await PatientService.search(params);
 
-            if (!observations || observations.length === 0) {
-                res.status(404).send('Nenhuma Observation encontrada para este Patient.');
-            } else {
-                res.status(200).json(observations);
-            }
+            res.status(200).json(result);
         } catch (e) {
             console.error(e);
-            res.status(500).json(e.message);
+            res.status(500).json({ error: e.message });
         }
     }
 

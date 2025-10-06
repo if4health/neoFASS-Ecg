@@ -102,26 +102,6 @@ class AuthService {
     }
   }
 
-  /*async select(body) {
-    const patient = await PatientSchema.findById(body.patient);
-    const code = await signPayload(
-      { patient: patient._id, scope: body.scope },
-      3600
-    );
-    await AuthDatabase.create({
-      aud: body.aud,
-      scope: body.scope,
-      client_id: body.client_id,
-      state: body.state,
-      redirect_uri: body.redirect_uri,
-      patient_id: body.patient,
-      authorization_code: code,
-    });
-    return {
-      code,
-    };
-  }*/
-
   async token(body) {
     try {
       if (!body.grant_type) {
@@ -224,7 +204,7 @@ class AuthService {
           };
         }
 
-        const access_token = await signDevice({
+        const access_token = await signPayload({
           client_id: auth.client_id,
           scope: auth.scope,
         });

@@ -27,23 +27,6 @@ class ObservationController {
         }
     }
 
-    async getObservation(req, res) {
-        try {
-            const result = await ObservationService.getObservation(req.query);
-            if (result === null) {
-                res.status(404).json('Observation not found');
-            } else {
-                res.json({
-                    resourceType: 'Bundle',
-                    entry: result,
-                });
-            }
-        } catch (e) {
-            console.log(e);
-            res.status(500).json(e);
-        }
-    }
-
     async getObservationById(req, res) {
         try {
             const result = await ObservationService.getObservationById(req.params.id);
@@ -107,6 +90,18 @@ class ObservationController {
             res.status(500).json(e);
         }
 
+    }
+
+    async searchObservations(req, res) {
+        try {
+            const params = req.query;
+            const bundle = await ObservationService.search(params);
+
+            res.status(200).json(bundle);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({ error: e.message });
+        }
     }
 }
 

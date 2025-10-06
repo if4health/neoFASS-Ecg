@@ -14,32 +14,46 @@
 
                 <ul class="scope-list">
                     <%
-                    const scopes=checkScope(scope);
-                    const resources=Object.keys(scopes);
+                    const scopes = checkScope(scope);
+                    const resources = Object.keys(scopes);
                     const mapResources = {
-                        "Patient" : "dados do paciente",
-                        "Observation" : "dados de exames",
-                        "Practitioner" : "dados do médico",
-                        "Bundle" : "dados de Bundle"
+                        "Patient": "dados do paciente",
+                        "Observation": "dados de exames",
+                        "Practitioner": "dados do médico",
+                        "Bundle": "dados de Bundle"
                     };
                     const mapPermissions = {
-                        "GET": "Ler",
-                        "POST": "Criar",
-                        "PUT": "Alterar",
-                        "DELETE": "Excluir"
+                        "GET": "ler",
+                        "POST": "criar",
+                        "PUT": "alterar",
+                        "DELETE": "excluir",
+                        "PATCH": "acrescentar"
                     };
-                    for(let resource of resources) {
-                        for(let i=0; i < scopes[resource].length; i++) {
-                          const method=Object.keys(scopes[resource][i])[0];
-                          if (method !='undefined' ) { %>
-                        <li>
-                            <strong>
-                                <%= mapPermissions[method] %>
-                            </strong>
-                            <%= mapResources[resource] || resource %>
-                        </li>
-                        <% } } } %>
-                </ul>
+
+                    function formatList(items) {
+                        if (items.length === 1) return items[0];
+                        const last = items.pop();
+                        return items.join(", ") + " e " + last;
+                    }
+                    %>
+
+                    <ul class="list-disc list-inside">
+                        <% for (const resource of resources) {
+                            const methods = scopes[resource]
+                            .map(entry => Object.keys(entry)[0])
+                            .filter(method => mapPermissions[method])
+                            .map(method => mapPermissions[method]);
+
+                            if (methods.length) {
+                            const formatted = formatList([...methods]);
+                        %>
+                        <li>Acesso para <strong><%= formatted %></strong> <%= mapResources[resource] || resource %>.</li>
+                        <% } } %>
+                    </ul>
+                    </ul>
+
+
+
 
                 <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>">
                 <input type="hidden" name="state" value="<%= state %>">

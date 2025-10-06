@@ -1,6 +1,4 @@
 const PatientSchema = require("../model/patient/Patient");
-const PractitionerSchema = require('../model/practitioner/Practitioner');
-const ObservationSchema = require("../model/observation/Observation");
 const mongoose = require('mongoose');
 
 class PatientService {
@@ -13,22 +11,6 @@ class PatientService {
     async getPatientById(id) {
         const result = await this.findById(id);
         return result;
-    }
-
-    async findPatientByPractitioner(medico) {
-      const practitioner = await PractitionerSchema.findOne({
-        'identifier.value': medico,
-        'identifier.system': 'own',
-      });
-      if (!practitioner) return [];
-      const patients = await PatientSchema.find({
-        'generalPractitioner.reference': `local/${practitioner.id}`,
-      });
-      const pacientes = patients.map((patient) => ({
-        id: patient._id,
-        name: `${patient.name[0].use} ${patient.name[0].family}`,
-      }));
-      return pacientes;
     }
 
     async findById(id) {
@@ -51,6 +33,37 @@ class PatientService {
     async delete(id) {
         const deleted = await PatientSchema.findByIdAndDelete(id).exec();
         return deleted;
+    }
+
+    async search(params) {
+        let query = {};
+
+        if (params.name) {
+            query["name.text"] = { $regex: params.name, $options: "i" };
+        }
+
+        if (params.identifier) {
+            query["identifier.value"] = params.identifier;
+        }
+
+        if (params.birthdate) {
+            query.birthDate = params.birthdate;
+        }
+
+        if (params["general-practitioner"]) {
+            query["generalPractitioner.reference"] = params["general-practitioner"];
+        }
+
+        const patients = await PatientSchema.find(query).exec();
+
+        return {
+            resourceType: "Bundle",
+            type: "searchset",
+            total: patients.length,
+            entry: patients.map(p => ({
+                resource: p.toObject()
+            }))
+        };
     }
 }
 
