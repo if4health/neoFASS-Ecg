@@ -2,6 +2,7 @@ const ObservationSchema = require('../model/observation/Observation');
 const ChunkSchema = require('../model/chunk/Chunk');
 const PatientService = require('../service/PatientService');
 const mongoose = require('mongoose');
+const PatientSchema = require('../model/patient/Patient');
 
 class ObservationService {
   async createObservation(observation) {
@@ -324,19 +325,31 @@ class ObservationService {
     return deleted;
   }
 
-  async search(params) {
+  async search(params, user) {
     let query = {};
+    const userId = user?.fhirUser?.split('/').pop();
+
+    if (user.userLevel === 'system') {
+      // TODO: Implementar pesquisa geral
+    }
+
+    if (user.userLevel === 'user') {
+      const patients = await PatientSchema.find({
+        'generalPractitioner.reference': `Practitioner/${userId}`,
+      }).select('_id');
+
+      const patientIds = patients.map((p) => p._id.toString());
+      query['subject.reference'] = {
+        $in: patientIds.map((id) => `Patient/${id}`),
+      };
+    }
+
+    if (user.userLevel === 'patient') {
+      query['subject.reference'] = userId;
+    }
 
     if (params.patient) {
       query['subject.reference'] = params.patient;
-    }
-
-    if (params.code) {
-      query['code.coding.code'] = params.code;
-    }
-
-    if (params.date) {
-      query['effectiveDateTime'] = params.date;
     }
 
     const observations = await ObservationSchema.find(query).exec();

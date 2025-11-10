@@ -5,12 +5,12 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const AuthDatabase = require('../model/BusinessModels/Auth')();
 const UserService = require('./UserService');
+const { signPayload, verifyToken, signDevice } = require('../utils/keys');
 const {
-  signPayload,
-  verifyToken,
-  signDevice,
-} = require('../utils/keys');
-const { getFhirResourceModel, parseFhirReference, defaultScopesByRole } = require('../utils/fhirUtils');
+  getFhirResourceModel,
+  parseFhirReference,
+  defaultScopesByRole,
+} = require('../utils/fhirUtils');
 
 class AuthService {
   async login(body) {
@@ -18,25 +18,25 @@ class AuthService {
       let user = await UserService.findOne({
         username: body.username,
       });
-      
+
       if (!user || !(await bcrypt.compare(body.password, user.password))) {
         return {
           code: 401,
-          message: 'Usuário e/ou senha estão incorretos.'
-        }
-      };
+          message: 'Usuário e/ou senha estão incorretos.',
+        };
+      }
 
       const auth = await AuthDatabase.findOne({
         client_id: body.client_id,
         user_id: user._id,
-        redirect_uri: body.redirect_uri
+        redirect_uri: body.redirect_uri,
       });
 
       if (!auth) {
         return {
           login: user,
         };
-      };
+      }
 
       const code = await this._generateAuthorizationCode(
         user,
@@ -49,9 +49,8 @@ class AuthService {
 
       return {
         code,
-        login: user
-      }
-
+        login: user,
+      };
     } catch (e) {
       console.error('Error logging in:', e.message);
       throw e;
@@ -61,18 +60,20 @@ class AuthService {
   async authorize(params) {
     try {
       const user = await UserService.findById(params.user_id);
-      
+
       if (!user) {
         return {
           code: 404,
-          message: 'Usuário não encontrado.'
-        }
-      };
+          message: 'Usuário não encontrado.',
+        };
+      }
 
       const allowedScopes = defaultScopesByRole[user.role] || [];
       const requestedScopes = params.scope?.split(' ') || [];
-      const filteredScopes = requestedScopes.filter(scope => allowedScopes.includes(scope));
-      
+      const filteredScopes = requestedScopes.filter((scope) =>
+        allowedScopes.includes(scope)
+      );
+
       if (filteredScopes.length === 0) {
         return {
           code: 403,
@@ -95,7 +96,6 @@ class AuthService {
         params,
         code,
       };
-
     } catch (e) {
       console.error('Error authorizing:', e.message);
       throw e;
@@ -121,7 +121,7 @@ class AuthService {
         }
 
         const decoded = await verifyToken(body.code);
-        
+
         const auth = await AuthDatabase.findOne({
           client_id,
           redirect_uri,
@@ -135,7 +135,7 @@ class AuthService {
             message: 'Authorization code inválido ou expirado.',
           };
         }
-        
+
         auth.authorization_code = null;
         await auth.save();
 
@@ -183,7 +183,6 @@ class AuthService {
         }
 
         return response;
-
       } else if (body.grant_type === 'client_credentials') {
         if (!body.client_id || !body.client_secret) {
           return {
@@ -233,7 +232,7 @@ class AuthService {
 
   async device(body) {
     try {
-      if(!body.client_name){
+      if (!body.client_name) {
         return {
           code: 400,
           message: 'Client_name em falta.',
@@ -250,17 +249,15 @@ class AuthService {
         client_name,
         client_id,
         client_secret,
-        scope
-
-      })
+        scope,
+      });
 
       await auth.save();
 
       return {
-          client_id,
-          client_secret
-        };
-
+        client_id,
+        client_secret,
+      };
     } catch (e) {
       console.error('Error in device signup:', e.message);
       return {
@@ -271,7 +268,14 @@ class AuthService {
   }
 
   ///
-  async _generateAuthorizationCode(user, scope, client_id, redirect_uri, aud, state) {
+  async _generateAuthorizationCode(
+    user,
+    scope,
+    client_id,
+    redirect_uri,
+    aud,
+    state
+  ) {
     const resourceType = parseFhirReference(user.fhirReference);
     const ResourceModel = getFhirResourceModel(resourceType);
 
@@ -293,7 +297,9 @@ class AuthService {
     const payload = {
       sub,
       scope,
-      ...(isPatient ? { patient: sub } : { fhirUser: `${process.env.DEFAULT_URL}/${resourceType}/${sub}` }),
+      ...(isPatient
+        ? { patient: sub }
+        : { fhirUser: `${process.env.DEFAULT_URL}/${resourceType}/${sub}` }),
     };
 
     const code = await signPayload(payload, 60);

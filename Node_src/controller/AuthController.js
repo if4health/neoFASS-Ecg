@@ -4,7 +4,9 @@ const UserService = require('../service/UserService');
 
 class AuthController {
   async register(req, res) {
-    const redirectPath = `${req.baseUrl}/login?${new URLSearchParams(req.query).toString()}`;
+    const redirectPath = `${req.baseUrl}/login?${new URLSearchParams(
+      req.query
+    ).toString()}`;
     res.redirect(redirectPath);
   }
 
@@ -118,7 +120,8 @@ class AuthController {
       const result = await AuthService.device(req.body);
 
       req.session.flash = {
-        message: 'Dispositivo registrado com sucesso! Guarde as seguintes credenciais: ',
+        message:
+          'Dispositivo registrado com sucesso! Guarde as seguintes credenciais: ',
         client_id: result.client_id,
         client_secret: result.client_secret,
       };
@@ -135,6 +138,5 @@ class AuthController {
     }
   }
 }
-
 
 module.exports = new AuthController();

@@ -20,7 +20,7 @@ function mapPermissions(permissions) {
     r: 'GET',
     u: 'PUT',
     d: 'DELETE',
-    h: 'PATCH', 
+    h: 'PATCH',
   };
   return arrayPermissions.map((permission) => {
     return {
@@ -52,15 +52,18 @@ function resourcesScope(scope) {
   const resourceParts = resource.split('.');
   const resourceName = resourceParts[0];
   if (resourceName === '*') {
-    return ['Patient', 'Observation', 'Bundle', 'Practitioner'].reduce((resources, resource) => {
-      const permissions = resourceParts[1];
-      const testVersion = convertV2(permissions);
-      const arrayPermissions = mapPermissions(testVersion);
-      return {
-        ...resources,
-        [resource]: arrayPermissions,
-      };
-    }, {});
+    return ['Patient', 'Observation', 'Bundle', 'Practitioner'].reduce(
+      (resources, resource) => {
+        const permissions = resourceParts[1];
+        const testVersion = convertV2(permissions);
+        const arrayPermissions = mapPermissions(testVersion);
+        return {
+          ...resources,
+          [resource]: arrayPermissions,
+        };
+      },
+      {}
+    );
   }
   const permissions = resourceParts[1];
   const testVersion = convertV2(permissions);
@@ -93,10 +96,11 @@ module.exports.verifyJWT = async function verifyJWT(req, res, next) {
     return;
   }
   const token = req.headers['authorization'] || req.headers['Authorization'];
-  if (!token) return res.status(401).json({ auth: false, message: 'No token provided.' });
+  if (!token)
+    return res.status(401).json({ auth: false, message: 'No token provided.' });
 
   try {
-    const code = token.split(' ')[1]; 
+    const code = token.split(' ')[1];
     const key = await getPublicKey();
     const decoded = jwt.verify(code, key);
     if (!decoded.scope)
@@ -119,6 +123,22 @@ module.exports.verifyJWT = async function verifyJWT(req, res, next) {
       return res
         .status(401)
         .json({ auth: false, message: 'Not allowed to this method' });
+
+    const scope = decoded.scope || '';
+    const scopes = scope.split(/\s+/);
+
+    let userLevel = null;
+    if (scopes.some((s) => s.startsWith('system/'))) userLevel = 'system';
+    else if (scopes.some((s) => s.startsWith('user/'))) userLevel = 'user';
+    else if (scopes.some((s) => s.startsWith('patient/')))
+      userLevel = 'patient';
+
+    req.user = {
+      scope: decoded.scope,
+      permissions,
+      userLevel,
+      fhirUser: decoded.fhirUser || decoded.sub || null,
+    };
 
     next();
   } catch (e) {
