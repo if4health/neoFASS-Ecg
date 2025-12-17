@@ -3,8 +3,8 @@ const PatientSchema = require('../model/patient/Patient');
 const PractitionerSchema = require('../model/practitioner/Practitioner');
 
 const defaultScopesByRole = {
-  patient: ['openid', 'profile', 'patient/*.rs', 'launch/patient'],
-  practitioner: ['openid', 'profile', 'user/*.crudsh', 'launch'],
+  patient: ['openid', 'profile', 'patient/*.rs', 'patient/Observation.rs', 'patient/Patient.rs', 'launch/patient'],
+  practitioner: ['openid', 'profile', 'user/*.crudsh', 'user/Observation.crudsh', 'user/Patient.crudsh', 'launch'],
 };
 
 function getFhirResourceModel(type) {
@@ -29,17 +29,21 @@ function parseFhirReference(reference) {
 
 async function linkFhirResource(type, userData) {
   const Model = getFhirResourceModel(type);
+  const givenParts = userData.name.split(/\s+/);
   let fhirResource = await Model.findOne({
     name: {
       $elemMatch: {
         family: userData.surname,
-        given: userData.name,
+        given: { $all: givenParts },
       },
     },
-    birthDate: userData.birthDate,
   });
 
-  if (fhirResource) return fhirResource;
+  if (fhirResource) {
+    fhirResource.identifier[0].value = userData._id.toString();
+    await fhirResource.save();
+    return fhirResource;
+  }
 
   const newFhirResource = new Model({
     resourceType: type,

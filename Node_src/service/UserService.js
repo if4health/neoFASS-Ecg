@@ -16,15 +16,17 @@ class UserService {
       if (exists) {
         return { code: 400, message: 'Usuário já existe!' };
       }
-      
+
       User.password = await bcrypt.hash(User.password, saltRounds);
-      
+
       if (!User.role) User.role = 'patient';
 
-      User.fhirReference = User.fhirReference || (User.role === 'practitioner' ? 'Practitioner' : 'Patient');
+      User.fhirReference =
+        User.fhirReference ||
+        (User.role === 'practitioner' ? 'Practitioner' : 'Patient');
 
       const user = await UserDatabase.create(User);
-      
+
       const userData = {
         _id: user._id,
         name: User.name,
@@ -32,8 +34,8 @@ class UserService {
         birthDate: User.birthDate,
         phone: User.phone,
         email: User.email,
-      }
-      
+      };
+
       const resourceType = user.fhirReference;
 
       let fhirResource = await linkFhirResource(resourceType, userData);
@@ -50,7 +52,6 @@ class UserService {
           value: fhirResource._id.toString(),
         },
       };
-
     } catch (e) {
       console.error('Error creating user:', e);
       return { code: 500, message: 'Erro interno ao criar usuário.' };
@@ -74,7 +75,6 @@ class UserService {
       return e;
     }
   }
-
 
   async findById(id) {
     try {
