@@ -7,26 +7,33 @@ const PatientSchema = require('../model/patient/Patient');
 class ObservationService {
   async createObservation(observation) {
     let patientReference = this.getReference(observation);
-    if (patientReference) {
-      const isValidPatient = await this.isValidPatient(patientReference);
-      if (!isValidPatient) {
-        throw new Error('Patient not found');
-      }
-    }
+
+    if (!patientReference)
+        throw new Error("Patient reference not found");
+
+    const isValidPatient = await this.isValidPatient(patientReference);
+    if (!isValidPatient)
+        throw new Error("Patient not found");
 
     let id = mongoose.Types.ObjectId();
     observation.id = id;
     observation._id = id;
-    if (observation.component) {
-      observation.component.map(async (comp, index) => {
-        const reference = `data_${id}_${index}`;
-        const data = comp.valueSampledData.data;
-        comp.valueSampledData.data = reference;
-        const period = comp.valueSampledData.period;
-        const maxSamples = this.getMaxSamples(period);
-        await this.chunkData(maxSamples, data, reference, 0);
-      });
+
+    if (!observation.component)
+        throw new Error("Component not found");
+
+    for (let [index, comp] of observation.component.entries()) {
+        if (comp.valueSampledData && comp.valueSampledData.data) {
+            const reference = `data_${id}_${index}`;
+            const data = comp.valueSampledData.data;
+            comp.valueSampledData.data = reference;
+
+            const period = comp.valueSampledData.period;
+            const maxSamples = this.getMaxSamples(period);
+            await this.chuckData(maxSamples, data, reference, 0);
+        }
     }
+
     const result = await ObservationSchema.create(observation);
     return observation;
   }
@@ -264,10 +271,15 @@ class ObservationService {
 
   async getObservationById(id) {
     const result = await this.findById(id);
-    const sampleValues = await this.convertChunkToData(result);
-    result.component.forEach((comp, index) => {
-      comp.valueSampledData.data = sampleValues[index];
-    });
+    if (result.component) {
+        const sampleValues = await this.convertChunckToData(result);
+
+        result.component.forEach((comp, index) => {
+            if (comp.valueSampledData && sampleValues) {
+                comp.valueSampledData.data = sampleValues[index];
+            }
+        });
+    }
     return result;
   }
 
@@ -321,9 +333,8 @@ class ObservationService {
   }
 
   async delete(id) {
-    const deleted = await ObservationSchema.findByIdAndDelete(id).exec();
-    return deleted;
-  }
+      return await ObservationSchema.findByIdAndDelete(id).exec();
+   }
 
   async search(params, user) {
     let query = {};
