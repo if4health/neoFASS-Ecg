@@ -6,6 +6,7 @@ const patientRouter = require('./router/PatientRouter');
 const observationRouter = require('./router/ObservationRouter');
 const practitionerRouter = require('./router/PractitionerRouter');
 const bundleRouter = require('./router/BundleRouter');
+const diagnosticReportRouter = require('./router/DiagnosticReportRouter');
 
 const authRouter = require('./router/AuthRouter');
 
@@ -27,6 +28,7 @@ router.use('/Patient', verifyJWT, patientRouter);
 router.use('/Observation', verifyJWT, observationRouter);
 router.use('/Practitioner', verifyJWT, practitionerRouter);
 router.use('/Bundle', verifyJWT, bundleRouter);
+router.use('/DiagnosticReport', verifyJWT, diagnosticReportRouter);
 
 router.get('/render', (req, res) => {
   const data = new set_data(req.query['id']);
