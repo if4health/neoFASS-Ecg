@@ -16,18 +16,34 @@ class DiagnosticReportService {
         if (!report)
             return null;
 
-        if (_include == 'DiagnosticReport:result' && report.result) {
-            const obsIds = report.result.map(r => r.reference.split('/')[1]);
+        let entries = [
+            {
+                resource: report
+            }
+        ];
 
+        if (_include === 'DiagnosticReport:result' && report.result) {
+            const obsIds = report.result.map(r => r.reference.split('/')[1]);
 
             const observations = await Promise.all(
                 obsIds.map(obsId => ObservationService.getObservationById(obsId))
             );
 
-            report.fullResults = observations;
+            observations.forEach(obs => {
+                if (obs) {
+                    entries.push({
+                        resource: obs
+                    });
+                }
+            });
         }
 
-        return report;
+        return {
+            resourceType: "Bundle",
+            type: "searchset",
+            total: entries.length,
+            entry: entries
+        };
     }
 
     async getDiagnosticReports(query) {

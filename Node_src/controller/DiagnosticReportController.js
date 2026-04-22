@@ -9,10 +9,7 @@ class DiagnosticReportController {
             if (!result) {
                 return res.status(404).json('DiagnosticReport not found');
             }
-            res.json({
-                resourceType: 'Bundle',
-                entry: Array.isArray(result) ? result : [result],
-            });
+        res.json(result);
         } catch (e) {
             console.error(e);
             res.status(500).json({ message: e.message, error: e });
