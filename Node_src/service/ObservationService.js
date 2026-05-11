@@ -208,64 +208,84 @@ class ObservationService {
 
   async getObservationByStartAndEnd(id, start, end) {
     const observation = await this.findById(id);
+
+    // converter para número
+    start = parseInt(start);
+    end = parseInt(end);
+
     const preResponses = [];
 
-    const promisses = observation.component.map((comp, index) => {
+    const promises = observation.component.map((comp, index) => {
       const ref = comp.valueSampledData.data;
+
       preResponses.push({
         code: comp.code.coding[0].display,
         period: comp.valueSampledData.period,
       });
+
       return ChunkSchema.find({
         reference: ref,
-        position: { $gte: start - 1, $lte: end - 1 },
-      });
+        position: {
+          $gte: start,
+          $lte: end,
+        },
+      }).sort({ position: 1 });
     });
 
     let responses = [];
 
-    await Promise.all(promisses).then((values) => {
-      values.map((value, index) => {
-        let data = '';
-        value.forEach((v) => {
-          data = data + v.data + ' ';
-        });
-        responses.push({
-          ...preResponses[index],
-          data: data,
-        });
+    const values = await Promise.all(promises);
+
+    values.forEach((value, index) => {
+      let data = '';
+
+      value.forEach((v) => {
+        data += v.data + ' ';
+      });
+
+      responses.push({
+        ...preResponses[index],
+        data: data.trim(),
       });
     });
 
     return responses;
   }
-
   async getObservationByIdAndMin(id, min) {
     const observation = await this.findById(id);
+
+    // converter para número
+    min = parseInt(min);
+
     const preResponses = [];
-    const promisses = observation.component.map((comp, index) => {
+
+    const promises = observation.component.map((comp, index) => {
       const ref = comp.valueSampledData.data;
+
       preResponses.push({
         code: comp.code.coding[0].display,
         period: comp.valueSampledData.period,
       });
-      return ChunkSchema.findOne({ reference: ref, position: min - 1 }).exec();
+
+      return ChunkSchema.findOne({
+        reference: ref,
+        position: min,
+      }).exec();
     });
 
     let responses = [];
 
-    await Promise.all(promisses).then((values) => {
-      values.map((value, index) => {
-        responses.push({
-          ...preResponses[index],
-          data: value.data,
-        });
+    const values = await Promise.all(promises);
+
+    values.forEach((value, index) => {
+      responses.push({
+        ...preResponses[index],
+        data: value ? value.data : '',
       });
     });
 
     return responses;
   }
-
   async getObservationById(id) {
     const result = await this.findById(id);
     if (result.component) {
