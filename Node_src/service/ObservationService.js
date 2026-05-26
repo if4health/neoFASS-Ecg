@@ -312,7 +312,7 @@ class ObservationService {
   async getObservationById(id) {
     const result = await this.findById(id);
     if (result.component) {
-      const sampleValues = await this.convertChunckToData(result);
+      const sampleValues = await this.convertChunkToData(result);
 
       result.component.forEach((comp, index) => {
         if (comp.valueSampledData && sampleValues) {
