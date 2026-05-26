@@ -107,6 +107,11 @@ class ObservationService {
     let sorted = this.sortPatchJson(array);
     let values = sorted.map((patchValue) => patchValue.value);
 
+    // VALIDAÇÃO
+    if (values.length !== observation.component.length) {
+      throw new Error('Patch/component size mismatch');
+    }
+
     observation.component.map((comp, index) => {
       const maxSamples = this.getMaxSamples(comp.valueSampledData.period);
       const lastChunk = lastChunks[index];
@@ -188,18 +193,12 @@ class ObservationService {
       throw new HttpError('Observation not found!', 404);
     }
   }
-
   sortPatchJson(array) {
     return array.sort((a, b) => {
-      let posA = a.path.split('/')[2];
-      let posB = b.path.split('/')[2];
-      if (posA > posB) {
-        return 1;
-      }
-      if (posA < posB) {
-        return -1;
-      }
-      return 0;
+      const posA = Number(a.path.split('/')[2]);
+      const posB = Number(b.path.split('/')[2]);
+
+      return posA - posB;
     });
   }
 
