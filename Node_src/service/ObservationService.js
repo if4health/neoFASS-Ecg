@@ -205,121 +205,65 @@ class ObservationService {
   async getObservationByStartAndEnd(id, start, end) {
     const observation = await this.findById(id);
 
-    // converter para número
     start = parseInt(start);
     end = parseInt(end);
 
-    const preResponses = [];
-
-    const promises = observation.component.map((comp, index) => {
+    const promises = observation.component.map((comp) => {
       const ref = comp.valueSampledData.data;
-
-      preResponses.push({
-        code: comp.code.coding[0].display,
-        period: comp.valueSampledData.period,
-      });
-
       return ChunkSchema.find({
         reference: ref,
-        position: {
-          $gte: start,
-          $lte: end,
-        },
+        position: { $gte: start, $lte: end },
       }).sort({ position: 1 });
     });
 
-    let responses = [];
-
     const values = await Promise.all(promises);
 
-    values.forEach((value, index) => {
-      let data = '';
+    // Clona o documento para não mutar o original
+    const obsCopy = observation.toObject();
 
-      value.forEach((v) => {
-        data += v.data + ' ';
-      });
-
-      responses.push({
-        ...preResponses[index],
-        data: data.trim(),
-      });
+    obsCopy.component = obsCopy.component.map((comp, index) => {
+      const data = values[index]
+        .map((v) => v.data)
+        .join(' ')
+        .trim();
+      return {
+        ...comp,
+        valueSampledData: {
+          ...comp.valueSampledData,
+          data,
+        },
+      };
     });
 
-    return responses;
+    return obsCopy;
   }
+
   async getObservationByIdAndMin(id, min) {
     const observation = await this.findById(id);
 
-    // converter para número
     min = parseInt(min);
 
-    const preResponses = [];
-
-    const promises = observation.component.map((comp, index) => {
+    const promises = observation.component.map((comp) => {
       const ref = comp.valueSampledData.data;
-
-      preResponses.push({
-        code: comp.code.coding[0].display,
-        period: comp.valueSampledData.period,
-      });
-
-      return ChunkSchema.findOne({
-        reference: ref,
-        position: min,
-      }).exec();
+      return ChunkSchema.findOne({ reference: ref, position: min }).exec();
     });
-
-    let responses = [];
 
     const values = await Promise.all(promises);
 
-    values.forEach((value, index) => {
-      responses.push({
-        ...preResponses[index],
-        data: value ? value.data : '',
-      });
+    const obsCopy = observation.toObject();
+
+    obsCopy.component = obsCopy.component.map((comp, index) => {
+      const data = values[index]?.data ?? '';
+      return {
+        ...comp,
+        valueSampledData: {
+          ...comp.valueSampledData,
+          data,
+        },
+      };
     });
 
-    return responses;
-  }
-  async getObservationByIdAndMin(id, min) {
-    const observation = await this.findById(id);
-    const preResponses = [];
-    const promisses = observation.component.map((comp, index) => {
-      const ref = comp.valueSampledData.data;
-      preResponses.push({
-        code: comp.code.coding[0].display,
-        period: comp.valueSampledData.period,
-      });
-      return ChunkSchema.findOne({ reference: ref, position: min - 1 }).exec();
-    });
-
-    let responses = [];
-
-    await Promise.all(promisses).then((values) => {
-      values.map((value, index) => {
-        responses.push({
-          ...preResponses[index],
-          data: value.data,
-        });
-      });
-    });
-
-    return responses;
-  }
-
-  async getObservationById(id) {
-    const result = await this.findById(id);
-    if (result.component) {
-      const sampleValues = await this.convertChunkToData(result);
-
-      result.component.forEach((comp, index) => {
-        if (comp.valueSampledData && sampleValues) {
-          comp.valueSampledData.data = sampleValues[index];
-        }
-      });
-    }
-    return result;
+    return obsCopy;
   }
 
   async convertChunkToData(observation) {
@@ -357,6 +301,19 @@ class ObservationService {
       });
     }
     return await this.update(id, observation);
+  }
+  async getObservationById(id) {
+    const result = await this.findById(id);
+    if (result.component) {
+      const sampleValues = await this.convertChunkToData(result);
+
+      result.component.forEach((comp, index) => {
+        if (comp.valueSampledData && sampleValues) {
+          comp.valueSampledData.data = sampleValues[index];
+        }
+      });
+    }
+    return result;
   }
 
   async update(id, observation) {
@@ -407,15 +364,9 @@ class ObservationService {
 
     const bundleEntries = await Promise.all(
       observations.map(async (obs) => {
-        const firstMinuteData = await this.getObservationByIdAndMin(obs._id, 1);
-        const obsCopy = obs.toObject();
-        obsCopy.component = obsCopy.component.map((comp, index) => ({
-          ...comp,
-          valueSampledData: {
-            ...comp.valueSampledData,
-            data: firstMinuteData[index]?.data || '',
-          },
-        }));
+        const firstMinuteObs = await this.getObservationByIdAndMin(obs._id, 1);
+        obsCopy.component = firstMinuteObs.component; // já vem montado
+
         return { resource: obsCopy };
       })
     );
