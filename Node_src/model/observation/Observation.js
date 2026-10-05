@@ -11,7 +11,7 @@ const Annotation = require('./Annotation');
 const Observation_ReferenceRange = require('./Observation_ReferenceRange');
 const Observation_Component = require('./Observation_Component');
 const { schema } = require('../patient/Patient');
-
+const Meta = require('./meta');
 const ObservationSchema = new Schema(
   {
     id: {
@@ -20,6 +20,10 @@ const ObservationSchema = new Schema(
     resourceType: {
       type: String,
       required: true,
+    },
+    meta: {
+      type: Meta,
+      default: void 0,
     },
     identifier: {
       type: [Identifier],

@@ -52,18 +52,22 @@ function resourcesScope(scope) {
   const resourceParts = resource.split('.');
   const resourceName = resourceParts[0];
   if (resourceName === '*') {
-    return ['Patient', 'Observation', 'Bundle', 'Practitioner', 'DiagnosticReport'].reduce(
-      (resources, resource) => {
-        const permissions = resourceParts[1];
-        const testVersion = convertV2(permissions);
-        const arrayPermissions = mapPermissions(testVersion);
-        return {
-          ...resources,
-          [resource]: arrayPermissions,
-        };
-      },
-      {}
-    );
+    return [
+      'Patient',
+      'Observation',
+      'Bundle',
+      'Practitioner',
+      'DiagnosticReport',
+      'Procedure',
+    ].reduce((resources, resource) => {
+      const permissions = resourceParts[1];
+      const testVersion = convertV2(permissions);
+      const arrayPermissions = mapPermissions(testVersion);
+      return {
+        ...resources,
+        [resource]: arrayPermissions,
+      };
+    }, {});
   }
   const permissions = resourceParts[1];
   const testVersion = convertV2(permissions);

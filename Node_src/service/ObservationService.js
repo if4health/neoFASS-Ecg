@@ -3,33 +3,74 @@ const ChunkSchema = require('../model/chunk/Chunk');
 const PatientService = require('../service/PatientService');
 const mongoose = require('mongoose');
 const PatientSchema = require('../model/patient/Patient');
+const BRMedidaObservadaValidator = require('../service/validator/profiles/BRMedidaObservadaValidator');
+const BR_MEDIDA_OBSERVADA =
+  'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRMedidaObservada';
 
 class ObservationService {
   async createObservation(observation) {
-    let patientReference = this.getReference(observation);
-    if (patientReference) {
-      const isValidPatient = await this.isValidPatient(patientReference);
-      if (!isValidPatient) {
-        throw new Error('Patient not found');
+    if (this.hasProfile(observation, BR_MEDIDA_OBSERVADA)) {
+      BRMedidaObservadaValidator.validate(observation);
+
+      if (observation.subject) {
+        const isValidPatient = await this.isValidPatientByIdentifier(
+          observation.subject
+        );
+
+        if (!isValidPatient) {
+          throw new Error('Patient not found');
+        }
+      }
+    } else {
+      const patientReference = this.getReference(observation);
+
+      if (patientReference) {
+        const isValidPatient = await this.isValidPatient(patientReference);
+
+        if (!isValidPatient) {
+          throw new Error('Patient not found');
+        }
       }
     }
 
     let id = mongoose.Types.ObjectId();
+
     observation.id = id;
     observation._id = id;
+
     if (observation.component) {
       observation.component.map(async (comp, index) => {
         const reference = `data_${id}_${index}`;
         const data = comp.valueSampledData.data;
+
         comp.valueSampledData.data = reference;
+
         const period = comp.valueSampledData.period;
         const maxSamples = this.getMaxSamples(period);
+
         await this.chunkData(maxSamples, data, reference, 0);
       });
     }
 
     const result = await ObservationSchema.create(observation);
+
     return observation;
+  }
+
+  hasProfile(observation, profileUrl) {
+    return observation.meta?.profile?.includes(profileUrl);
+  }
+
+  async isValidPatientByIdentifier(subject) {
+    if (!subject?.identifier?.value) {
+      return false;
+    }
+
+    const patient = await PatientService.getPatientByIdentifier(
+      subject.identifier
+    );
+
+    return patient != null;
   }
 
   async chunkData(maxSamples, data, reference, position) {

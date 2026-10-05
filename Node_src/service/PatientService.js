@@ -11,19 +11,31 @@ class PatientService {
     const result = await this.findById(id);
     return result;
   }
+  async getPatientByIdentifier(identifier) {
+    const query = {
+      'identifier.value': identifier.value,
+    };
+
+    if (identifier.system) {
+      query['identifier.system'] = identifier.system;
+    }
+
+    return await PatientSchema.findOne(query).exec();
+  }
 
   async findById(id) {
     if (mongoose.Types.ObjectId.isValid(id)) {
       const patient = await PatientSchema.findById(id).exec();
+
       if (!patient) {
         throw new HttpError('Patient not found!', 404);
       }
+
       return patient;
     } else {
       throw new HttpError('Patient not found!', 404);
     }
   }
-
   async update(id, patient) {
     const updated = await PatientSchema.findByIdAndUpdate(
       { _id: id },

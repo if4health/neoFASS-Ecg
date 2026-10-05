@@ -7,7 +7,7 @@ const observationRouter = require('./router/ObservationRouter');
 const practitionerRouter = require('./router/PractitionerRouter');
 const bundleRouter = require('./router/BundleRouter');
 const diagnosticReportRouter = require('./router/DiagnosticReportRouter');
-
+const procedureRouter = require('./router/ProcedureRouter');
 const authRouter = require('./router/AuthRouter');
 
 const { verifyJWT } = require('./middleware/AuthMiddleware');
@@ -29,7 +29,7 @@ router.use('/Observation', verifyJWT, observationRouter);
 router.use('/Practitioner', verifyJWT, practitionerRouter);
 router.use('/Bundle', verifyJWT, bundleRouter);
 router.use('/DiagnosticReport', verifyJWT, diagnosticReportRouter);
-
+router.use('/Procedure', verifyJWT, procedureRouter);
 router.get('/render', (req, res) => {
   const data = new set_data(req.query['id']);
 
