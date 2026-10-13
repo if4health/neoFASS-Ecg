@@ -5,7 +5,7 @@ const Reference = require('../observation/Reference');
 const CodeableConcept = require('../observation/CodeableConcept');
 const Period = require('../observation/Period');
 const Annotation = require('../observation/Annotation');
-
+const Meta = require('../observation/Meta');
 const ProcedureSchema = new Schema(
   {
     id: {
@@ -16,7 +16,15 @@ const ProcedureSchema = new Schema(
       type: String,
       required: true,
     },
+    meta: {
+      type: Meta,
+      default: void 0,
+    },
 
+    extension: {
+      type: [Schema.Types.Mixed],
+      default: void 0,
+    },
     identifier: {
       type: [Identifier],
       default: void 0,

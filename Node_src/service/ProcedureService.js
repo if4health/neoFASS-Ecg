@@ -1,6 +1,10 @@
 const ProcedureSchema = require('../model/Procedure/Procedure');
 const PatientService = require('./PatientService');
+const BRProcedimentoRealizadoValidator = require('./validator/profiles/BRProcedimentoRealizadoValidator');
 const mongoose = require('mongoose');
+
+const BR_PROCEDIMENTO_REALIZADO =
+  'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRProcedimentoRealizado-1.0';
 
 class ProcedureService {
   async getProcedureById(query) {
@@ -33,13 +37,27 @@ class ProcedureService {
   }
 
   async create(data) {
-    if (data.subject && data.subject.reference) {
-      const patientId = data.subject.reference.split('/')[1];
+    if (this.hasProfile(data, BR_PROCEDIMENTO_REALIZADO)) {
+      BRProcedimentoRealizadoValidator.validate(data);
 
-      const patient = await PatientService.getPatientById(patientId);
+      if (data.subject) {
+        const isValidPatient = await this.isValidPatientByIdentifier(
+          data.subject
+        );
 
-      if (!patient) {
-        throw new Error('Patient not found');
+        if (!isValidPatient) {
+          throw new Error('Patient not found');
+        }
+      }
+    } else {
+      if (data.subject && data.subject.reference) {
+        const patientId = data.subject.reference.split('/')[1];
+
+        const patient = await PatientService.getPatientById(patientId);
+
+        if (!patient) {
+          throw new Error('Patient not found');
+        }
       }
     }
 
@@ -51,6 +69,22 @@ class ProcedureService {
     }
 
     return await ProcedureSchema.create(data);
+  }
+
+  hasProfile(procedure, profileUrl) {
+    return procedure.meta?.profile?.includes(profileUrl);
+  }
+
+  async isValidPatientByIdentifier(subject) {
+    if (!subject?.identifier?.value) {
+      return false;
+    }
+
+    const patient = await PatientService.getPatientByIdentifier(
+      subject.identifier
+    );
+
+    return patient != null;
   }
 
   async update(id, data) {
