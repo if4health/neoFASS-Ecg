@@ -27,7 +27,7 @@ class BRRegistroAtendimentoClinicoValidator {
     this.validateStatus(composition, errors);
     this.validateType(composition, errors);
     this.validateCategory(composition, errors);
-    this.validateSubject(composition, errors);
+    //    this.validateSubject(composition, errors);
     this.validateAuthor(composition, errors);
     this.validateDate(composition, errors);
     this.validateTitle(composition, errors);
@@ -36,16 +36,18 @@ class BRRegistroAtendimentoClinicoValidator {
     this.validateSections(composition, errors);
 
     if (errors.length > 0) {
-      throw new Error(
+      const error = new Error(
         `Composition não atende ao perfil BRRegistroAtendimentoClinico:\n- ${errors.join(
           '\n- '
         )}`
       );
+
+      error.statusCode = 400;
+      throw error;
     }
 
     return true;
   }
-
   validateResourceType(composition, errors) {
     if (composition.resourceType !== 'Composition') {
       errors.push('resourceType deve ser "Composition".');

@@ -1,7 +1,10 @@
 const CompositionSchema = require('../model/Composition/Composition');
 const PatientService = require('./PatientService');
 const mongoose = require('mongoose');
+const BRRegistroAtendimentoClinicoValidator = require('./validator/profiles/BRRegistroAtendimentoClinicoValidator');
 
+const BR_REGISTRO_ATENDIMENTO_CLINICO =
+  'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRRegistroAtendimentoClinico';
 class CompositionService {
   async getCompositionById(query) {
     const { id } = query;
@@ -34,6 +37,29 @@ class CompositionService {
 
   async create(data) {
     // Valida a referência ao paciente, caso informada.
+    if (this.hasProfile(data, BR_REGISTRO_ATENDIMENTO_CLINICO)) {
+      BRRegistroAtendimentoClinicoValidator.validate(data);
+
+      if (data.subject) {
+        const isValidPatient = await this.isValidPatientByIdentifier(
+          data.subject
+        );
+
+        if (!isValidPatient) {
+          throw new Error('Patient not found');
+        }
+      }
+    } else {
+      // Mantenha aqui o fluxo atual para Composition sem o perfil RAC.
+      if (data.subject?.reference) {
+        const patientId = data.subject.reference.split('/')[1];
+        const patient = await PatientService.getPatientById(patientId);
+
+        if (!patient) {
+          throw new Error('Patient not found');
+        }
+      }
+    }
     if (data.subject && data.subject.reference) {
       const patientId = data.subject.reference.split('/')[1];
 
@@ -54,7 +80,21 @@ class CompositionService {
 
     return await CompositionSchema.create(data);
   }
+  hasProfile(composition, profileUrl) {
+    return composition.meta?.profile?.includes(profileUrl);
+  }
 
+  async isValidPatientByIdentifier(subject) {
+    if (!subject?.identifier?.value || !subject?.identifier?.system) {
+      return false;
+    }
+
+    const patient = await PatientService.getPatientByIdentifier(
+      subject.identifier
+    );
+
+    return patient != null;
+  }
   async update(id, data) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error('Invalid ID format');
