@@ -1,12 +1,35 @@
 const { Schema, model } = require('mongoose');
-const Identifier = require('../Identifier');
-const CodeableConcept = require('../CodeableConcept');
-const ContactPoint = require('../ContactPoint');
-const Address = require('../Address');
-const Reference = require('../Reference');
 
+const Identifier = require('../patient/Identifier');
+const CodeableConcept = require('../patient/CodeableConcept');
+const ContactPoint = require('../patient/ContactPoint');
+const Address = require('../patient/Address');
+const Reference = require('../patient/Reference');
+const MetaSchema = new Schema(
+  {
+    versionId: String,
+    lastUpdated: Date,
+    profile: {
+      type: [String],
+      default: undefined,
+    },
+    security: {
+      type: [Schema.Types.Mixed],
+      default: undefined,
+    },
+    tag: {
+      type: [Schema.Types.Mixed],
+      default: undefined,
+    },
+  },
+  { _id: false }
+);
 const PositionSchema = new Schema(
   {
+    meta: {
+      type: MetaSchema,
+      default: undefined,
+    },
     longitude: Number,
     latitude: Number,
     altitude: {

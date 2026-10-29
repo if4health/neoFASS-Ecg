@@ -9,7 +9,7 @@ const bundleRouter = require('./router/BundleRouter');
 const diagnosticReportRouter = require('./router/DiagnosticReportRouter');
 const procedureRouter = require('./router/ProcedureRouter');
 const compositionRouter = require('./router/CompositionRouter');
-
+const LocationRouter = require('./router/LocationRouter');
 const authRouter = require('./router/AuthRouter');
 
 const { verifyJWT } = require('./middleware/AuthMiddleware');
@@ -33,6 +33,7 @@ router.use('/Bundle', verifyJWT, bundleRouter);
 router.use('/DiagnosticReport', verifyJWT, diagnosticReportRouter);
 router.use('/Procedure', verifyJWT, procedureRouter);
 router.use('/Composition', verifyJWT, compositionRouter);
+router.use('/Location', verifyJWT, LocationRouter);
 router.get('/render', (req, res) => {
   const data = new set_data(req.query['id']);
 
