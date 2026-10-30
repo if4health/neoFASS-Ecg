@@ -61,6 +61,7 @@ function resourcesScope(scope) {
       'Procedure',
       'Composition',
       'Location',
+      'Encounter',
     ].reduce((resources, resource) => {
       const permissions = resourceParts[1];
       const testVersion = convertV2(permissions);
